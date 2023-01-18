@@ -14,12 +14,14 @@ datasource db {
 }
 
 model User {
-  id                 String   @id @default(uuid())
-  email              String   @unique
+  id                 String     @id @default(uuid())
+  email              String     @unique
   password           String?
-  needPasswordChange Boolean  @default(true)
-  createdAt          DateTime @default(now())
-  updatedAt          DateTime @updatedAt
+  role               UserRole
+  status         UserStatus @default(ACTIVE)
+  needPasswordChange Boolean    @default(true)
+  createdAt          DateTime   @default(now())
+  updatedAt          DateTime   @updatedAt
   admin              Admin?
 
   @@map("users")
@@ -35,4 +37,18 @@ model Admin {
   isDeleted     Boolean  @default(false)
   createdAt     DateTime @default(now())
   updatedAt     DateTime @updatedAt
+}
+
+enum UserRole {
+  ADMIN
+  DOCTOR
+  PATIENT
+  SUPER_ADMIN
+}
+
+enum UserStatus {
+  BLOCKED
+  ACTIVE
+  PENDING
+  DELETED
 }

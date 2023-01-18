@@ -1,20 +1,16 @@
-/* eslint-disable @typescript-eslint/no-explicit-any */
-import mongoose from "mongoose";
+import { Prisma } from "@prisma/client";
+import { IGenericErrorResponse } from "../types/common";
 
-const handleValidationError = (err: mongoose.Error.ValidationError): any => {
-    const errorIssues: any = Object.values(err.errors).map((value) => {
-        return {
-            path: value.path,
-            message: value.message,
-        };
-    });
+const handleValidationError = (
+    error: Prisma.PrismaClientValidationError
+): IGenericErrorResponse => {
     return {
         statusCode: 400,
-        message: "Validation Error",
-        errorMessage: errorIssues.map((value: any) => value.message).join(" "),
+        error: "Validation Error",
+        message: error.message,
         errorDetails: {
-            issues: errorIssues,
-            name: err.name,
+            issues: [{ path: "", message: error.message }],
+            name: error.name,
         },
     };
 };

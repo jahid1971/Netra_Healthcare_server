@@ -1,0 +1,15 @@
+{
+    "keep": {
+        "days": true,
+        "amount": 14
+    },
+    "auditLog": "D:\\projects\\Fullstack\\nextjs\\Netra HealthCare Server\\logs\\winston\\errors\\.4d3f778b7f01e4941d5e88e0afd1f4ef107c9cd9-audit.json",
+    "files": [
+        {
+            "date": 1730444189134,
+            "name": "D:\\projects\\Fullstack\\nextjs\\Netra HealthCare Server\\logs\\winston\\errors\\phu-2024-01-11-12-error.log",
+            "hash": "cd29b1d0d7336aa0e32c6a1cae3f8cc64d4e99e93326c31f714c773d4a9ca5f0"
+        }
+    ],
+    "hashType": "sha256"
+}

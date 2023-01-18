@@ -1,26 +1,19 @@
-/* eslint-disable @typescript-eslint/no-explicit-any */
 /* eslint-disable no-unused-vars */
 /* eslint-disable @typescript-eslint/no-unused-vars */
-/* eslint-disable prefer-const */
 import { ErrorRequestHandler } from "express";
-import handleValidationError from "../errors/handleValidationError";
-// import { ICastErrorResult, TErrorResponse } from "../interface/error";
-import mongoose from "mongoose";
 import { ZodError } from "zod";
 import handlerZodError from "../errors/handleZodEror";
-import handleCastError from "../errors/handleCastError";
-import handleDuplicateError from "../errors/handleDuplicateError";
-import handleBSONError from "../errors/handleBsonError";
-import { BSONError } from "bson";
+import config from "../config";
+import { Prisma } from "@prisma/client";
+import handleValidationError from "../errors/handleValidationError";
+import handleClientRequestError from "../errors/handleClientRequestError";
+import { IGenericErrorResponse } from "../types/common";
 
-// eslint-disable-next-line no-unused-vars
-const globalErrorHandler: ErrorRequestHandler  = (err, req, res, next) => {
-
-
-    let errorResponse: any  = {
+const globalErrorHandler: ErrorRequestHandler = (err, req, res, next) => {
+    let errorResponse: IGenericErrorResponse = {
         statusCode: err.statusCode || 500,
-        message: err.name || "Something went wrong",
-        errorMessage: err.message || "Something went wrong",
+        error: err.name || "Unknown Error",
+        message: err.message || "Something went wrong",
         errorDetails: {
             issues: err.issues || [],
             name: err.name || "",
@@ -28,19 +21,22 @@ const globalErrorHandler: ErrorRequestHandler  = (err, req, res, next) => {
     };
 
     if (err instanceof ZodError) errorResponse = handlerZodError(err);
-    else if (err instanceof mongoose.Error.ValidationError) errorResponse = handleValidationError(err);
-    else if (err instanceof mongoose.Error.CastError) errorResponse = handleCastError(err);
-    else if (err?.code === 11000) errorResponse = handleDuplicateError(err);
-    else if (err instanceof BSONError) errorResponse = handleBSONError(err);
-    // else if (err instanceof AppError) errorResponse.statusCode = err.statusCode;
 
-    return res.status(errorResponse.statusCode).json({
+    if (err instanceof Prisma.PrismaClientValidationError)
+        errorResponse = handleValidationError(err);
+
+    if (err instanceof Prisma.PrismaClientKnownRequestError)
+        errorResponse = handleClientRequestError(err);
+
+    res.status(errorResponse.statusCode).json({
         success: false,
+        error: errorResponse.error,
         message: errorResponse.message,
-        errorMessage: errorResponse.errorMessage,
         errorDetails: errorResponse.errorDetails,
-        stack: err?.stack 
+        stack: config.NODE_ENV === "development" ? err.stack : undefined,
     });
+
+    return;
 };
 
 export default globalErrorHandler;

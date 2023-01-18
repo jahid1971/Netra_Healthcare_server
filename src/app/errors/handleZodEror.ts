@@ -1,21 +1,22 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 import { ZodError } from "zod";
+import { IErrorIssue, IGenericErrorResponse } from "../types/common";
 
-const handlerZodError = (err: ZodError): any => {
-    const errorIssues: any = err.issues.map((issue: any) => {
+const handlerZodError = (err: ZodError): IGenericErrorResponse => {
+    const errorIssues: IErrorIssue[] = err.issues.map((issue) => {
         return {
-            path: issue.path[issue.path.length - 1],
+            path: issue.path[issue.path.length - 1]?.toString() || "",
             message: issue.message,
             code: issue.code,
-            expected: issue.expected,
-            received: issue.received,
+            expected: "expected" in issue ? issue.expected : undefined,
+            received: "received" in issue ? issue.received : undefined,
         };
     });
 
     return {
         statusCode: 400,
-        message: "Validation Error",
-        errorMessage: errorIssues.map((value: any) => value.message).join(" "),
+        error: "Validation Error",
+        message: errorIssues.map((value: any) => value.message).join(" "),
         errorDetails: {
             issues: errorIssues,
             name: err.name,
