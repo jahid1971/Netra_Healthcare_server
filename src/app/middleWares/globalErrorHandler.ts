@@ -15,8 +15,9 @@ const globalErrorHandler: ErrorRequestHandler = (err, req, res, next) => {
         error: err.name || "Unknown Error",
         message: err.message || "Something went wrong",
         errorDetails: {
-            issues: err.issues || [],
             name: err.name || "",
+            issues: err.issues || [],
+           
         },
     };
 
