@@ -11,7 +11,7 @@ const handleClientRequestError = (
     if (error.code === "P2002") {
         // Unique constraint violation
         const target = (error.meta?.target as string[]) || [];
-        
+
         path = target.join(", ");
         message =
             (error.meta?.cause as string) ||
@@ -45,8 +45,8 @@ const handleClientRequestError = (
         error: "Prisma Known Error",
         message: errorIssues.map((issue) => issue.message).join(" "),
         errorDetails: {
-            issues: errorIssues,
             name: error.name,
+            issues: errorIssues,
         },
     };
 };

@@ -17,7 +17,6 @@ const globalErrorHandler: ErrorRequestHandler = (err, req, res, next) => {
         errorDetails: {
             name: err.name || "",
             issues: err.issues || [],
-           
         },
     };
 
@@ -33,7 +32,10 @@ const globalErrorHandler: ErrorRequestHandler = (err, req, res, next) => {
         success: false,
         error: errorResponse.error,
         message: errorResponse.message,
-        errorDetails: errorResponse.errorDetails,
+
+        ...(errorResponse.errorDetails.issues.length && {
+            errorDetails: errorResponse.errorDetails,
+        }),
         stack: config.NODE_ENV === "development" ? err.stack : undefined,
     });
 

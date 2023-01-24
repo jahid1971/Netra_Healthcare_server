@@ -2,37 +2,75 @@
 const getAllItems = async (
     Model: any,
     query: Record<string, unknown>,
-    searchableFields:string[],
-    excludeFields: string[] = []
+    options: { searchableFields: string[]; filterableFields: string[] }
 ) => {
-    const queryObject = { ...query };
-
-    const excludeFieldsList = ["searchTerm", "page", "limit", "sortBy", "sortOrder", ...excludeFields];
-    excludeFieldsList.forEach((value) => delete queryObject[value]);
-
-    // const searchTerm = (query.searchTerm as string) || "";
     const sortBy = (query?.sortBy as string) || "createdAt";
-    const sortOrder = query?.sortOrder === "desc" ? -1 : 1;
+    const sortOrder = query?.sortOrder === "desc" ? "desc" : "asc";
     const page = Number(query?.page) || 1;
     const limit = Number(query?.limit) || 10;
 
-    if (query.searchTerm && typeof query.searchTerm === "string" && query.searchTerm.trim() !== "") {
-        queryObject.$or = searchableFields.map((field) => ({
-            [field]: { $regex: query.searchTerm, $options: "i" },
-        }));
+    const andConditions = [];
+
+    if (
+        query.searchTerm &&
+        typeof query.searchTerm === "string" &&
+        query.searchTerm.trim() !== ""
+    ) {
+        andConditions.push({
+            OR: options.searchableFields.map((field) => ({
+                [field]: {
+                    contains: query.searchTerm,
+                    mode: "insensitive",
+                },
+            })),
+        });
     }
 
- 
+    const filterObject = options.filterableFields.reduce(
+        (acc: Record<string, unknown>, field) => {
+            if (query[field]) acc[field] = query[field];
+            return acc;
+        },
+        {}
+    );
 
-    const result = await Model.find(queryObject)
-        .skip((page - 1) * limit)
-        .limit(limit)
-        .sort({ [sortBy]: sortOrder })
-        .populate("branch", "_id branchName");
+    if (Object.keys(filterObject).length > 0) {
+        andConditions.push({
+            AND: Object.keys(filterObject).map((key) => {
+                return {
+                    [key]: {
+                        equals: (filterObject as any)[key],
+                    },
+                };
+            }),
+        });
+    }
 
-    const total = await Model.countDocuments(queryObject);
-    const totalPages = Math.ceil(total / limit);
-    return { data: result, meta: { page, limit, total, totalPages } };
+    andConditions.push({
+        isDeleted: false,
+    });
+
+    const whereConditions =
+        andConditions.length > 0 ? { AND: andConditions } : {};
+
+    const result = await Model.findMany({
+        where: whereConditions,
+        skip: (page - 1) * limit,
+        take: limit,
+        orderBy: { [sortBy]: sortOrder },
+    });
+
+    const total = await Model.count({ where: whereConditions });
+
+    return {
+        data: result,
+        meta: {
+            page,
+            limit,
+            total,
+            totalPages: Math.ceil(total / limit),
+        },
+    };
 };
 
 export default getAllItems;

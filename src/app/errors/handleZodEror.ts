@@ -15,11 +15,11 @@ const handlerZodError = (err: ZodError): IGenericErrorResponse => {
 
     return {
         statusCode: 400,
-        error: "Validation Error",
+        error: "Zod Validation Error",
         message: errorIssues.map((value: any) => value.message).join(" "),
         errorDetails: {
-            issues: errorIssues,
             name: err.name,
+            issues: errorIssues,
         },
     };
 };

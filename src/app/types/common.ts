@@ -15,3 +15,12 @@ export interface IGenericErrorResponse {
         name: string;
     };
 }
+
+export interface IQueryParams {
+    searchTerm?: string;
+    sortBy?: string;
+    sortOrder?: string;
+    page?: number;
+    limit?: number;
+    [key: string]: any;
+}
