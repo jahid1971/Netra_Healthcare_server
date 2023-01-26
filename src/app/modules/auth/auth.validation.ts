@@ -1,12 +1,40 @@
-import { z } from 'zod';
+import { z } from "zod";
 
 const loginValidationSchema = z.object({
-  body: z.object({
-    id: z.string({ required_error: 'Id is required.' }),
-    password: z.string({ required_error: 'Password is required' }),
-  }),
+    body: z.object({
+        id: z.string({ required_error: "Id is required." }),
+        password: z.string({ required_error: "Password is required" }),
+    }),
 });
 
-export const authValidationSchema ={
-    loginValidationSchema
-}
+const changePasswordZodSchema = z.object({
+    oldPassword: z.string({
+        required_error: "Old password  is required",
+    }),
+    newPassword: z.string({
+        required_error: "New password  is required",
+    }),
+});
+
+const refreshTokenZodSchema = z.object({
+    cookies: z.object({
+        refreshToken: z.string({
+            required_error: "Refresh Token is required",
+        }),
+    }),
+});
+
+const resetPasswordZodSchema = z.object({
+    id: z.string(),
+    newPassword: z.string({
+        required_error: "Password is required",
+    }),
+    token: z.string(),
+});
+
+export const authValidationSchema = {
+    loginValidationSchema,
+    changePasswordZodSchema,
+    refreshTokenZodSchema,
+    resetPasswordZodSchema,
+};

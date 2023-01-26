@@ -1,9 +1,13 @@
 import { Admin } from "@prisma/client";
 import { IQueryParams } from "../../types/common";
 import getAllItems from "../../utls/getAllItems";
-import prisma from "../../utls/prisma";
-import { findById } from "../../utls/utls.common";
-import AppError from "../../errors/AppError";
+
+import {
+    deleteById,
+    findById,
+    prisma,
+    softDeleteById,
+} from "../../utls/prismaUtils";
 
 const getAllLAdmin = async (query: IQueryParams) => {
     const result = getAllItems(prisma.admin, query, {
@@ -15,13 +19,12 @@ const getAllLAdmin = async (query: IQueryParams) => {
 };
 
 const getAdminById = async (id: string) => {
-    const result = await findById(prisma.admin, id);
+    const result = await findById(prisma.admin, id, "Admin");
     return result;
 };
 
 const updateAdmin = async (id: string, payload: Partial<Admin>) => {
-    const admin = await findById(prisma.admin, id);
-    if (!admin) throw new AppError(404, "Admin not found");
+    await findById(prisma.admin, id);
 
     const result = await prisma.admin.update({
         where: { id },
@@ -31,8 +34,20 @@ const updateAdmin = async (id: string, payload: Partial<Admin>) => {
     return result;
 };
 
+const deleteAdmin = async (id: string) => {
+    const deletedAdmin = await deleteById("admin", id);
+    return deletedAdmin;
+};
+
+const softDelete = async (id: string) => {
+    const deletedAdmin = await softDeleteById("admin", id);
+    return deletedAdmin;
+};
+
 export const adminService = {
     getAllLAdmin,
     getAdminById,
     updateAdmin,
+    deleteAdmin,
+    softDelete,
 };

@@ -2,9 +2,9 @@
 /* eslint-disable @typescript-eslint/no-unused-vars */
 import { Admin, User, UserRole } from "@prisma/client";
 
-import prisma from "../../utls/prisma";
+
 import AppError from "../../errors/AppError";
-import { findUserByEmail } from "../../utls/utls.common";
+import { findUserByEmail, prisma } from "../../utls/prismaUtils";
 import { passwordHash } from "../../utls/passwordHash";
 
 const createAdmin = async (payload: User & Admin) => {

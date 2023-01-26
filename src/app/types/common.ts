@@ -1,5 +1,8 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 
+import { User } from "@prisma/client";
+import { Request } from "express";
+
 export interface IErrorIssue {
     path?: string;
     message: string;
@@ -11,7 +14,7 @@ export interface IGenericErrorResponse {
     error: string;
     message: string;
     errorDetails: {
-        issues: IErrorIssue[];
+        issues: IErrorIssue[] | string;
         name: string;
     };
 }
@@ -23,4 +26,8 @@ export interface IQueryParams {
     page?: number;
     limit?: number;
     [key: string]: any;
+}
+
+export interface ICustomRequest extends Request {
+    user?: User;
 }

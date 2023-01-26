@@ -1,24 +1,36 @@
-import catchAsynch from "../../utls/catchAsynch";
+import catchAsync from "../../utls/catchAsync";
 import sendSuccessResponse from "../../utls/sendSuccessResponse";
 import { adminService } from "./admin.service";
 
-const getAllAdmin = catchAsynch(async (req, res) => {
+const getAllAdmin = catchAsync(async (req, res) => {
     const result = await adminService.getAllLAdmin(req.query);
-    sendSuccessResponse(res, result, "All Admins fetched successfully", 200);
+    sendSuccessResponse(res, result, "All Admins fetched successfully");
 });
 
-const getAdminById = catchAsynch(async (req, res) => {
+const getAdminById = catchAsync(async (req, res) => {
     const result = await adminService.getAdminById(req.params.id);
-    sendSuccessResponse(res, result, "Admin fetched successfully", 200);
+    sendSuccessResponse(res, result, "Admin fetched successfully");
 });
 
-const updateAdmin = catchAsynch(async (req, res) => {
+const updateAdmin = catchAsync(async (req, res) => {
     const result = await adminService.updateAdmin(req.params.id, req.body);
-    sendSuccessResponse(res, result, "Admin updated successfully", 200);
-})
+    sendSuccessResponse(res, result, "Admin updated successfully");
+});
+
+const deleteAdmin = catchAsync(async (req, res) => {
+    const result = await adminService.deleteAdmin(req.params.id);
+    sendSuccessResponse(res, result, "Admin deleted successfully");
+});
+
+const softDelete = catchAsync(async (req, res) => {
+    const result = await adminService.softDelete(req.params.id);
+    sendSuccessResponse(res, result, "Admin  deleted successfully");
+});
 
 export const adminController = {
     getAllAdmin,
     getAdminById,
     updateAdmin,
+    deleteAdmin,
+    softDelete,
 };

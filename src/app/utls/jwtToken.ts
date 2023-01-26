@@ -1,21 +1,45 @@
-import jwt, { JwtPayload, Secret } from "jsonwebtoken";
+/* eslint-disable no-console */
+/* eslint-disable @typescript-eslint/no-explicit-any */
+import jwt, { Secret } from "jsonwebtoken";
 import AppError from "../errors/AppError";
+import { UserRole } from "@prisma/client";
 
-const createToken = (jwtPayload: JwtPayload, secret: Secret, expireTime: string) => {
+export type TJwtPayload = {
+    id?: string;
+    userId?: string;
+    email?: string;
+    role?: UserRole;
+    iat?: number;
+};
+
+const createToken = (
+    jwtPayload: TJwtPayload,
+    secret: Secret,
+    expireTime: string
+) => {
     return jwt.sign(jwtPayload, secret, {
-        // algorithm: 'HS256',
+        algorithm: "HS256",
         expiresIn: expireTime,
     });
 };
 
-const verifyToken = (token: string, secret: string) => {
+const verifyToken = (
+    token: string,
+    secret: string,
+    tokenType = "Token"
+): TJwtPayload => {
     let decoded;
     try {
-        decoded = jwt.verify(token, secret as string) as JwtPayload;
-    } catch (error) {
-        throw new AppError(401, "Unauthorized !");
+        decoded = jwt.verify(token, secret as string);
+    } catch (error: any) {
+        console.log(error, "error in jwtVerifyToken....................");
+
+        if (error.name === "TokenExpiredError") {
+            throw new AppError(401, `${tokenType} has expired!!`, error);
+        }
+        throw new AppError(401, "Unauthorized access !", error);
     }
-    return decoded;
+    return decoded as TJwtPayload;
 };
 
 export const jwtToken = {

@@ -8,6 +8,8 @@ import { Prisma } from "@prisma/client";
 import handleValidationError from "../errors/handleValidationError";
 import handleClientRequestError from "../errors/handleClientRequestError";
 import { IGenericErrorResponse } from "../types/common";
+import handlerAppError from "../errors/handleAppError";
+import AppError from "../errors/AppError";
 
 const globalErrorHandler: ErrorRequestHandler = (err, req, res, next) => {
     let errorResponse: IGenericErrorResponse = {
@@ -19,6 +21,8 @@ const globalErrorHandler: ErrorRequestHandler = (err, req, res, next) => {
             issues: err.issues || [],
         },
     };
+
+    if (err instanceof AppError) errorResponse = handlerAppError(err);
 
     if (err instanceof ZodError) errorResponse = handlerZodError(err);
 

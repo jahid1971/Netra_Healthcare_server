@@ -2,7 +2,8 @@ import { Server } from "http";
 import app from "./app";
 
 import config from "./app/config";
-import { errorlogger, logger } from "./app/utls/logger";
+
+import { errorlogger, logger } from "./app/services/logger";
 
 async function main() {
     const server: Server = app.listen(config.port, () => {

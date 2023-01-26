@@ -1,77 +1,274 @@
-// /* eslint-disable @typescript-eslint/no-explicit-any */
-// import { JwtPayload } from "jsonwebtoken";
-// import httpStatus from "http-status";
-// import AppError from "../../errors/AppError";
-// import { passwordHash } from "../../utls/passwordHash";
+/* eslint-disable @typescript-eslint/no-explicit-any */
 
-// import User from "../user/user.model";
-// import { jwtToken } from "../../utls/jwtToken";
-// import config from "../../config";
+import AppError from "../../errors/AppError";
+import { passwordHash } from "../../utls/passwordHash";
 
-// // logIn......................logIn
+import { jwtToken, TJwtPayload } from "../../utls/jwtToken";
+import config from "../../config";
+import {
+    findById,
+    findUserByEmail,
+    findUserById,
+    prisma,
+} from "../../utls/prismaUtils";
+import { User, UserRole } from "@prisma/client";
+import emailSender from "../../services/emailSender";
+import oauth2Client from "../../services/googleClient";
+import axios from "axios";
 
-// const logIn = async (payload: { email: string; password: string }) => {
-//     const user = await User.findOne({ email: payload.email }).select("+password");
+// logIn......................logIn
 
-//     if (!user) {
-//         throw new AppError(httpStatus.NOT_FOUND, "User not found");
-//     }
+const logIn = async (payload: { email: string; password: string }) => {
+    const user = await findUserByEmail(payload.email);
 
-//     const plainPassword = payload.password;
-//     const hashedPassword = user.password;
+    if (!user) {
+        throw new AppError(404, "User not found");
+    }
 
-//     const isPasswordMatched = await passwordHash.comparePassword(plainPassword, hashedPassword);
+    const plainPassword = payload.password;
+    const hashedPassword = user.password;
 
-//     if (!isPasswordMatched) throw new AppError(404, "Invalid password");
+    const isPasswordMatched = await passwordHash.comparePassword(
+        plainPassword,
+        hashedPassword
+    );
 
-//     const jwtPayload: JwtPayload = {
-//         id: user._id,
-//         role: user.role,
-//         email: user.email,
-//         iat: Math.floor(Date.now() / 1000),
-//     };
+    if (!isPasswordMatched) throw new AppError(404, "Invalid password");
 
-//     const accessToken = jwtToken.createToken(
-//         jwtPayload,
-//         config.jwt_access_secret as string,
-//         config.jwt_access_expiry as string
-//     );
+    const jwtPayload = {
+        userId: user.id,
+        role: user.role,
+        email: user.email,
+        iat: Math.floor(Date.now() / 1000),
+    };
 
-//     const refreshToken = jwtToken.createToken(
-//         jwtPayload,
-//         config.jwt_refresh_secret as string,
-//         config.jwt_refresh_expiry as string
-//     );
+    const accessToken = jwtToken.createToken(
+        jwtPayload,
+        config.jwt_access_secret,
+        config.jwt_access_expiry
+    );
 
-//     // eslint-disable-next-line no-unused-vars, @typescript-eslint/no-unused-vars
-//     const { password, createdAt, updatedAt, ...userObject } = (user as any).toObject();
+    const refreshToken = jwtToken.createToken(
+        jwtPayload,
+        config.jwt_refresh_secret,
+        config.jwt_refresh_expiry
+    );
 
-//     return { accessToken, refreshToken, userObject };
-// };
+    return {
+        accessToken,
+        refreshToken,
+        needPasswordChange: user.needPasswordChange,
+    };
+};
 
-// // changePassword......................changePassword
-// const changePassword = async (id: string, payload: { oldPassword: string; newPassword: string }) => {
-//     const user = await User.findById(id).select("+password");
+// changePassword......................changePassword
+const changePassword = async (
+    user: User,
+    payload: { oldPassword: string; newPassword: string }
+) => {
+    const isPasswordMatched = await passwordHash.comparePassword(
+        payload.oldPassword,
+        user.password as string
+    );
+    if (!isPasswordMatched)
+        throw new AppError(401, "Old Password Is Incorrect");
 
-//     if (!user) throw new AppError(404, "User not found");
+    const isOldAdnNewPasswordSame = await passwordHash.comparePassword(
+        payload.newPassword,
+        user?.password as string
+    );
+    if (isOldAdnNewPasswordSame)
+        throw new AppError(400, "New password can't be same as old password");
 
-//     const isPasswordMatched = await passwordHash.comparePassword(payload.oldPassword, user?.password);
-//     if (!isPasswordMatched) throw new AppError(404, "Old Password Is Incorrect");
+    const hashedPassword = await passwordHash.hashPassword(payload.newPassword);
 
-//     const isOldAdnNewPasswordSame = await passwordHash.comparePassword(payload.newPassword, user?.password);
-//     if (isOldAdnNewPasswordSame) throw new AppError(404, "New password can't be same as old password");
+    const result = await prisma.user.update({
+        where: { id: user.id },
+        data: {
+            password: hashedPassword,
+            needPasswordChange: false,
+        },
+    });
 
-//     const hashedPassword = await passwordHash.hashPassword(payload.newPassword);
+    return result;
+};
 
-//     const result = await User.findByIdAndUpdate(
-//         id,
-//         { password: hashedPassword, needsPasswordChange: false },
-//         { new: true }
-//     );
-//     return result;
-// };
+const forgotPassword = async (email: string) => {
+    const user = await findUserByEmail(email);
+    if (!user) throw new AppError(404, "User not found");
 
-// export const authServices = {
-//     logIn,
-//     changePassword,
-// };
+    const resetPassToken = jwtToken.createToken(
+        { id: user.id },
+        config.resetPassword.reset_pass_secret,
+        config.resetPassword.reset_link_expires_in
+    );
+
+    const resetLink: string =
+        config.resetPassword.reset_link +
+        `?id=${user.id}&token=${resetPassToken}`;
+
+    await emailSender(
+        email,
+        `<div style="font-family: Arial, sans-serif; color: #333; line-height: 1.5;">
+              <p>Dear ${user.role},</p>
+              <p>Your password reset link:</p>
+              <a href="${resetLink}" style="text-decoration: none;">
+                <button style="cursor: pointer; padding: 10px 20px; background-color: #007BFF; color: white; border: none; border-radius: 5px; font-size: 16px; cursor: pointer;">
+                  RESET PASSWORD
+                </button>
+              </a>
+              <p>Thank you,</p>
+              <p>Netra Health Care</p>
+            </div>
+          `
+    );
+};
+
+const resetPassword = async (payload: {
+    id: string;
+    token: string;
+    newPassword: string;
+}) => {
+    const user = (await findUserById(payload.id)) as User;
+
+    const isTokenValid = jwtToken.verifyToken(
+        payload.token,
+        config.resetPassword.reset_pass_secret,
+        "Reset Password Link"
+    );
+
+    if (!isTokenValid) throw new AppError(401, "Something went wrong");
+
+    const hashedPassword = await passwordHash.hashPassword(payload.newPassword);
+
+    const result = await prisma.user.update({
+        where: { id: user.id },
+        data: {
+            password: hashedPassword,
+        },
+    });
+
+    return result;
+};
+
+const refresh = async (refreshToken: string) => {
+    const verifiedToken: TJwtPayload = jwtToken.verifyToken(
+        refreshToken,
+        config.jwt_refresh_secret,
+        "Refresh Token"
+    );
+
+    if (!verifiedToken.userId) throw new AppError(403, "invalid refresh token");
+
+    const user = await findUserById(verifiedToken.userId);
+
+    const jwtPayload = {
+        userId: user?.id,
+        role: user?.role,
+        email: user?.email,
+        iat: Math.floor(Date.now() / 1000),
+    };
+
+    const newAccessToken = jwtToken.createToken(
+        jwtPayload,
+        config.jwt_access_secret,
+        config.jwt_access_expiry
+    );
+
+    return {
+        accessToken: newAccessToken,
+    };
+};
+
+const LoginWithGoogle = async (clientRedirectRoute: string) => {
+    // Generate the url that will be used for the consent dialog.
+    const authorizeUrl = oauth2Client.generateAuthUrl({
+        access_type: "offline",
+        scope: [
+            "https://www.googleapis.com/auth/userinfo.profile",
+            "https://www.googleapis.com/auth/userinfo.email",
+        ],
+        prompt: "consent",
+        state: clientRedirectRoute,
+    });
+
+    return authorizeUrl;
+};
+
+const googleCallback = async (code: string) => {
+    let user: User | null = null;
+
+    try {
+        const googleRes = await oauth2Client.getToken(code);
+
+        oauth2Client.setCredentials(googleRes.tokens);
+        const userRes = await axios.get(
+            `https://www.googleapis.com/oauth2/v1/userinfo?alt=json&access_token=${googleRes.tokens.access_token}`
+        );
+        // user = userRes.data;
+
+        const { email, picture, name } = userRes.data;
+
+        const existingUser = await findUserByEmail(email);
+        user = existingUser;
+
+        if (!existingUser) {
+            user = await prisma.$transaction(async (transactionClient) => {
+                const newUser = await transactionClient.user.create({
+                    data: {
+                        email,
+                        role: UserRole.PATIENT,
+                    },
+                });
+
+                await transactionClient.patient.create({
+                    data: {
+                        name,
+                        email,
+                        profilePhoto: picture,
+                    },
+                });
+
+                return newUser;
+            });
+        }
+    } catch (err) {
+        console.log(err, "error in google callback authservice");
+    }
+
+    if (user) {
+        const jwtPayload = {
+            userId: user.id,
+            role: user.role,
+            email: user.email,
+            iat: Math.floor(Date.now() / 1000),
+        };
+
+        const accessToken = jwtToken.createToken(
+            jwtPayload,
+            config.jwt_access_secret,
+            config.jwt_access_expiry
+        );
+        const refreshToken = jwtToken.createToken(
+            jwtPayload,
+            config.jwt_refresh_secret,
+            config.jwt_refresh_expiry
+        );
+
+        return {
+            accessToken,
+            refreshToken,
+        };
+    }
+    return null;
+};
+
+export const authServices = {
+    logIn,
+    changePassword,
+    forgotPassword,
+    resetPassword,
+    refresh,
+    LoginWithGoogle,
+    googleCallback,
+};
