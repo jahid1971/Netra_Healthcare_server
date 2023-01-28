@@ -10,9 +10,9 @@ router.get("/", adminController.getAllAdmin);
 router.get("/:id", adminController.getAdminById);
 
 router.patch(
-    "/:id",
-    validateRequest(AdminValidation.updateAdmin),
-    adminController.updateAdmin
+  "/:id",
+  validateRequest(AdminValidation.updateAdmin),
+  adminController.updateAdmin,
 );
 
 router.delete("/:id", adminController.deleteAdmin);

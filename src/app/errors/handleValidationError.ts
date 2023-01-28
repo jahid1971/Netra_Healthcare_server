@@ -2,19 +2,19 @@ import { Prisma } from "@prisma/client";
 import { IGenericErrorResponse } from "../types/common";
 
 const handleValidationError = (
-    error: Prisma.PrismaClientValidationError
+  error: Prisma.PrismaClientValidationError,
 ): IGenericErrorResponse => {
-    console.log(error.message, "error in validation error.................");
-    
-    return {
-        statusCode: 400,
-        error: "Validation Error",
-        message: error.message,
-        errorDetails: {
-            name: error.name,
-            issues: [{ message: error.message }],
-        },
-    };
+  console.log(error.message, "error in validation error.................");
+
+  return {
+    statusCode: 400,
+    error: "Validation Error",
+    message: error.message,
+    errorDetails: {
+      name: error.name,
+      issues: [{ message: error.message }],
+    },
+  };
 };
 
 export default handleValidationError;

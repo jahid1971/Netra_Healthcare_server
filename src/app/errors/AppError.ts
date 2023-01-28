@@ -1,11 +1,11 @@
 class AppError extends Error {
     public statusCode: number;
-    public originalError?: Error;
+    public originalError?: Error | unknown;
 
     constructor(
         statusCode: number,
         message: string,
-        error?: Error,
+        error?: Error | unknown,
         stack = ""
     ) {
         super(message);

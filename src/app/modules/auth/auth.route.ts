@@ -10,22 +10,22 @@ const router = Router();
 
 router.post("/login", authControllers.logIn);
 router.post(
-    "/change-password",
-    checkAuth(
-        UserRole.SUPER_ADMIN,
-        UserRole.ADMIN,
-        UserRole.DOCTOR,
-        UserRole.PATIENT
-    ),
-    authControllers.changePassword
+  "/change-password",
+  checkAuth(
+    UserRole.SUPER_ADMIN,
+    UserRole.ADMIN,
+    UserRole.DOCTOR,
+    UserRole.PATIENT,
+  ),
+  authControllers.changePassword,
 );
 
 router.post("/forgot-password", authControllers.forgotPassword);
 
 router.patch(
-    "/reset-password",
-    validateRequest(authValidationSchema.resetPasswordZodSchema),
-    authControllers.resetPassword
+  "/reset-password",
+  validateRequest(authValidationSchema.resetPasswordZodSchema),
+  authControllers.resetPassword,
 );
 
 router.post("/refresh-token", authControllers.refresh);

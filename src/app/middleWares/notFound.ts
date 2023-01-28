@@ -1,10 +1,10 @@
-import { Request, Response } from 'express'
+import { Request, Response } from "express";
 
 const notFound = (req: Request, res: Response) => {
   res.status(404).json({
-    status: 'fail',
+    status: "fail",
     message: `Api Not Found for ${req.originalUrl}`,
-  })
-}
+  });
+};
 
-export default notFound
+export default notFound;

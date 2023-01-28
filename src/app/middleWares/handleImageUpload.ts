@@ -14,13 +14,15 @@ export const handleImageUpload = (
     const uploadMiddleware = upload.single("file");
 
     uploadMiddleware(req, res, (err) => {
+        console.log(err, "error in handle image.......");
+
         if (err) return next(err);
 
         if (typeof req.body.data === "string") {
             try {
-                req.body.data = JSON.parse(req.body.data); 
+                req.body.data = JSON.parse(req.body.data);
             } catch (parseError) {
-                return next(parseError); 
+                return next(parseError);
             }
         }
 
