@@ -1,14 +1,23 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 /* eslint-disable no-unused-vars */
 /* eslint-disable @typescript-eslint/no-unused-vars */
-import { Admin, Doctor, Patient, User, UserRole } from "@prisma/client";
+import {
+    Admin,
+    Doctor,
+    Patient,
+    User,
+    UserRole,
+    UserStatus,
+} from "@prisma/client";
 
 import AppError from "../../errors/AppError";
-import { findUserByEmail, prisma } from "../../utls/prismaUtils";
+import { findUserByEmail, findUserById, prisma } from "../../utls/prismaUtils";
 import { passwordHash } from "../../utls/passwordHash";
+import getAllItems from "../../utls/getAllItems";
+import { IQueryObject } from "../../types/common";
 
-const createUser = async <T extends User>(
-    payload: T,
+const createUser = async (
+    payload: User & (Admin | Doctor | Patient) & { specialties?: string[] },
     role: UserRole,
     modelName: "admin" | "doctor" | "patient"
 ) => {
@@ -28,46 +37,26 @@ const createUser = async <T extends User>(
             },
         });
 
-        const { password, ...userData } = payload;
+        const { password, specialties, ...userData } = payload;
 
         const newEntity = await transactionClient[modelName].create({
             data: userData,
         });
 
-        return { newUser, newEntity };
+        if (role === UserRole.DOCTOR && payload.specialties) {
+            await transactionClient.doctorSpecialty.createMany({
+                data: payload.specialties.map((specialtyId) => ({
+                    specialtyId,
+                    doctorId: newEntity.id,
+                })),
+            });
+        }
+
+        return { [modelName]: newEntity };
     });
 
     return result;
 };
-
-// const createAdmin = async (payload: User & Admin) => {
-//     const user = await findUserByEmail(payload.email);
-//     if (user) throw new AppError(400, "User already exists");
-
-//     const hashedPassword = await passwordHash.hashPassword(
-//         payload.password as string
-//     );
-
-//     const result = await prisma.$transaction(async (transactionClient) => {
-//         const newUser = await transactionClient.user.create({
-//             data: {
-//                 email: payload.email,
-//                 password: hashedPassword,
-//                 role: UserRole.ADMIN,
-//             },
-//         });
-
-//         const { password, ...adminData } = payload;
-
-//         const newAdmin = await transactionClient.admin.create({
-//             data: adminData,
-//         });
-
-//         return { newUser, newAdmin };
-//     });
-
-//     return result;
-// };
 
 const createAdmin = async (payload: User & Admin) => {
     return createUser(payload, UserRole.ADMIN, "admin");
@@ -79,8 +68,60 @@ const createDoctor = async (payload: User & Doctor) => {
 const createPatient = async (payload: User & Patient) => {
     return createUser(payload, UserRole.PATIENT, "patient");
 };
+
+const getAllUsers = async (query: IQueryObject) => {
+    const result = await getAllItems(prisma.user, query, {
+        searchableFields: ["email"],
+        filterableFields: ["email", "role", "status"],
+        andConditions: [{ status: { not: UserStatus.DELETED } }],
+        isDeletedCondition: false,
+        select: {
+            id: true,
+            email: true,
+            role: true,
+            status: true,
+            admin: true,
+            doctor: true,
+            patient: true,
+        },
+    });
+
+    return result;
+};
+
+const getMyProfile = async (user: User) => {
+    const myProfile = await prisma.user.findUnique({
+        where: { id: user.id },
+        select: {
+            email: true,
+            role: true,
+            needPasswordChange: true,
+            status: true,
+            ...(user.role === UserRole.ADMIN && { admin: true }),
+            ...(user.role === UserRole.DOCTOR && { doctor: true }),
+            ...(user.role === UserRole.PATIENT && { patient: true }),
+        },
+    });
+
+    return myProfile;
+};
+
+const changeUserStatus = async (userId: string, status: UserStatus) => {
+    await findUserById(userId);
+
+    const updateUser = await prisma.user.update({
+        where: { id: userId },
+        data: { status },
+    });
+
+    return updateUser;
+};
+
 export const userService = {
     createAdmin,
     createDoctor,
     createPatient,
+    getAllUsers,
+    getMyProfile,
+    changeUserStatus,
 };

@@ -1,15 +1,15 @@
 import { Admin } from "@prisma/client";
-import { IQueryParams } from "../../types/common";
+import { IQueryObject } from "../../types/common";
 import getAllItems from "../../utls/getAllItems";
 
 import {
-  deleteById,
+  deleteUserById,
   findById,
   prisma,
-  softDeleteById,
+  softDeleteUserById,
 } from "../../utls/prismaUtils";
 
-const getAllLAdmin = async (query: IQueryParams) => {
+const getAllLAdmin = async <Admin>(query: IQueryObject) => {
   const result = getAllItems(prisma.admin, query, {
     searchableFields: ["name", "email"],
     filterableFields: ["name", "email"],
@@ -35,12 +35,12 @@ const updateAdmin = async (id: string, payload: Partial<Admin>) => {
 };
 
 const deleteAdmin = async (id: string) => {
-  const deletedAdmin = await deleteById("admin", id);
+  const deletedAdmin = await deleteUserById("admin", id);
   return deletedAdmin;
 };
 
 const softDelete = async (id: string) => {
-  const deletedAdmin = await softDeleteById("admin", id);
+  const deletedAdmin = await softDeleteUserById("admin", id);
   return deletedAdmin;
 };
 
