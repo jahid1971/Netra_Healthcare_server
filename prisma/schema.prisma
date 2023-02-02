@@ -54,6 +54,7 @@ model Doctor {
   updatedAt           DateTime          @updatedAt
   user                User              @relation(fields: [email], references: [email])
   specialties         DoctorSpecialty[]
+  DoctorSchedule      DoctorSchedule[]
 }
 
 model Patient {
@@ -83,6 +84,26 @@ model DoctorSpecialty {
   specialty   Specialty @relation(fields: [specialtyId], references: [id], onDelete: Cascade)
 
   @@id([specialtyId, doctorId])
+}
+
+model Schedule {
+  id             String           @id @default(uuid())
+  startDateTime  DateTime
+  endDateTime    DateTime
+  createdAt      DateTime         @default(now())
+  updatedAt      DateTime         @updatedAt
+  DoctorSchedule DoctorSchedule[]
+}
+
+model DoctorSchedule {
+  doctorId      String
+  scheduleId    String
+  appointmentId String?
+  isBooked      Boolean  @default(false)
+  doctor        Doctor   @relation(fields: [doctorId], references: [id], onDelete: Cascade)
+  schedule      Schedule @relation(fields: [scheduleId], references: [id], onDelete: Cascade)
+
+  @@id([doctorId, scheduleId])
 }
 
 enum UserRole {

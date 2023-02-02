@@ -8,13 +8,14 @@ import {
     softDeleteUserById,
 } from "../../utls/prismaUtils";
 import getAllItems from "../../utls/getAllItems";
-import { IQueryObject } from "../../types/common";
+import { TQueryObject } from "../../types/common";
 import {
     doctorFilterableFields,
     doctorSearchableFileds,
 } from "./doctor.constants";
+import { TUpdateDoctorPayload } from "./doctor.validation";
 
-const getAllDoctors = async (query: IQueryObject) => {
+const getAllDoctors = async (query: TQueryObject) => {
     const andConditions = [];
 
     const specialtyIds = Array.isArray(query.specialties)
@@ -59,7 +60,7 @@ const getAllDoctors = async (query: IQueryObject) => {
         andConditions,
 
         include: { specialties: { select: { specialty: true } } },
-        
+
         extraSearchConditions: searchConditions,
     });
 
@@ -68,7 +69,7 @@ const getAllDoctors = async (query: IQueryObject) => {
 
 const updateDoctor = async (
     doctorId: string,
-    payload: Partial<Doctor & { specialties: DoctorSpecialty[] }>
+    payload: TUpdateDoctorPayload
 ) => {
     await findById(prisma.doctor, doctorId, "Doctor");
 

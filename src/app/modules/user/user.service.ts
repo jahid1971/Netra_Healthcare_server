@@ -14,7 +14,7 @@ import AppError from "../../errors/AppError";
 import { findUserByEmail, findUserById, prisma } from "../../utls/prismaUtils";
 import { passwordHash } from "../../utls/passwordHash";
 import getAllItems from "../../utls/getAllItems";
-import { IQueryObject } from "../../types/common";
+import { TQueryObject } from "../../types/common";
 
 const createUser = async (
     payload: User & (Admin | Doctor | Patient) & { specialties?: string[] },
@@ -69,7 +69,7 @@ const createPatient = async (payload: User & Patient) => {
     return createUser(payload, UserRole.PATIENT, "patient");
 };
 
-const getAllUsers = async (query: IQueryObject) => {
+const getAllUsers = async (query: TQueryObject) => {
     const result = await getAllItems(prisma.user, query, {
         searchableFields: ["email"],
         filterableFields: ["email", "role", "status"],

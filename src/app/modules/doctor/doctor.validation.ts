@@ -14,6 +14,8 @@ const updateDoctor = z.object({
     specialties: z.array(string()).optional(),
 });
 
+export type TUpdateDoctorPayload = z.infer<typeof updateDoctor>;
+
 export const DoctorValidation = {
     updateDoctor,
 };

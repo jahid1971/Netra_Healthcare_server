@@ -28,6 +28,7 @@ export default {
     client_secret: process.env.GOOGLE_CLIENT_SECRET,
   },
   client_url: process.env.CLIENT_URL,
+  timeZone: process.env.TIMEZONE,
   cloudinary_cloud_name: process.env.CLOUDINARY_CLOUD_NAME,
   cloudinary_api_key: process.env.CLOUDINARY_API_KEY,
   cloudinary_api_secret: process.env.CLOUDINARY_API_SECRET,

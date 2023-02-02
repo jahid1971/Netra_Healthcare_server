@@ -1,21 +1,19 @@
-import { IQueryObject } from "./../types/common";
+import { TQueryObject } from "./../types/common";
 /* eslint-disable @typescript-eslint/no-explicit-any */
 
 const getAllItems = async <T>(
     Model: any,
-    query: Partial<Record<keyof T, unknown>> & IQueryObject,
+    query: Partial<Record<keyof T, unknown>> & TQueryObject,
     options: {
-        searchableFields: (keyof T)[];
-        filterableFields: (keyof T)[];
+        searchableFields?: (keyof T)[];
+        filterableFields?: (keyof T)[];
         andConditions?: Record<string, unknown>[];
         isDeletedCondition?: boolean;
         select?: Partial<Record<keyof T, unknown>>;
         include?: Partial<Record<keyof T, unknown>>;
         extraSearchConditions?: Record<string, unknown>[];
     } = {
-        searchableFields: [],
-        filterableFields: [],
-        isDeletedCondition: true, // Default to true
+        isDeletedCondition: true,
     }
 ): Promise<{
     data: T[];
@@ -39,7 +37,7 @@ const getAllItems = async <T>(
     ) {
         andConditions.push({
             OR: [
-                ...options.searchableFields.map((field) => ({
+                ...(options.searchableFields ?? []).map((field) => ({
                     [field]: {
                         contains: query.searchTerm,
                         mode: "insensitive",
@@ -49,9 +47,9 @@ const getAllItems = async <T>(
             ],
         });
     }
-    console.log(andConditions, "andConditions...........");
+  
 
-    const filterObject = options.filterableFields.reduce(
+    const filterObject = options.filterableFields?.reduce(
         (acc, field) => {
             if (query[field]) acc[field] = query[field];
             return acc;
@@ -59,7 +57,7 @@ const getAllItems = async <T>(
         {} as Record<keyof T, unknown>
     );
 
-    if (Object.keys(filterObject).length > 0) {
+    if (filterObject && Object.keys(filterObject).length > 0) {
         andConditions.push({
             AND: Object.keys(filterObject).map((key) => {
                 return {

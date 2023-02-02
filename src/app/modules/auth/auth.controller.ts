@@ -25,8 +25,8 @@ const logIn = catchAsync(async (req, res) => {
   sendSuccessResponse(res, data, "User logged in successfully");
 });
 
-const changePassword = catchAsync(async (req: ICustomRequest, res) => {
-  const result = await authServices.changePassword(req.user as User, req.body);
+const changePassword = catchAsync(async (req, res) => {
+  const result = await authServices.changePassword(req.user, req.body);
 
   sendSuccessResponse(res, result, "Password changed successfully");
 });

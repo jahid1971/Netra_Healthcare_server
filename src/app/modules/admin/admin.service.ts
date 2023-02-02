@@ -1,5 +1,5 @@
 import { Admin } from "@prisma/client";
-import { IQueryObject } from "../../types/common";
+import { TQueryObject } from "../../types/common";
 import getAllItems from "../../utls/getAllItems";
 
 import {
@@ -9,7 +9,7 @@ import {
   softDeleteUserById,
 } from "../../utls/prismaUtils";
 
-const getAllLAdmin = async <Admin>(query: IQueryObject) => {
+const getAllLAdmin = async <Admin>(query: TQueryObject) => {
   const result = getAllItems(prisma.admin, query, {
     searchableFields: ["name", "email"],
     filterableFields: ["name", "email"],

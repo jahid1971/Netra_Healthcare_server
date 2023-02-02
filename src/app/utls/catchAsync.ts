@@ -3,7 +3,7 @@ import { NextFunction, Request, RequestHandler, Response } from "express";
 
 declare module "express-serve-static-core" {
   interface Request {
-    user: User | null;
+    user: User 
   }
 }
 

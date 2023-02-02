@@ -1,3 +1,5 @@
+/* eslint-disable @typescript-eslint/no-empty-object-type */
+import { TQueryObject } from "./common";
 /* eslint-disable @typescript-eslint/no-explicit-any */
 
 import { User, UserRole } from "@prisma/client";
@@ -19,14 +21,14 @@ export interface IGenericErrorResponse {
     };
 }
 
-export interface IQueryObject {
+export type TQueryObject<T = {}> = {
     searchTerm?: string;
     sortBy?: string;
     sortOrder?: string;
     page?: number;
     limit?: number;
     [key: string]: any;
-}
+} & Partial<T>;
 
 export interface ICustomRequest extends Request {
     user: User | null;
