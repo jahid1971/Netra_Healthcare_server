@@ -23,13 +23,14 @@ export const findUserById = async (id: string): Promise<User | null> => {
     return user;
 };
 
-export const findById = async (
+export const existsById = async (
     Model: any,
     id: string,
-    modelName = "Record"
+    modelName = "Record",
+    isDeletedFieldExists = true
 ) => {
     const result = await Model.findUnique({
-        where: { id, isDeleted: false },
+        where: { id, ...(isDeletedFieldExists ? { isDeleted: false } : {}) },
     });
 
     if (!result) throw new AppError(404, `${modelName}  not found`);
@@ -43,7 +44,7 @@ export const deleteUserById = async (
     referenceField: string = "email"
 ) => {
     return await prisma.$transaction(async (prismaClient: any) => {
-        await findById(prismaClient[modelName], id, modelName);
+        await existsById(prismaClient[modelName], id, modelName);
 
         const deletedRecord = await prismaClient[modelName].delete({
             where: { id },
@@ -63,7 +64,7 @@ export const softDeleteUserById = async (
     referenceField: string = "email"
 ) => {
     return await prisma.$transaction(async (prismaClient: any) => {
-        await findById(prismaClient[modelName], id, modelName);
+        await existsById(prismaClient[modelName], id, modelName);
 
         const softDeletedRecord = await prismaClient[modelName].update({
             where: { id },

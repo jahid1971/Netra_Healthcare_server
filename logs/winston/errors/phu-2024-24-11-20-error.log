@@ -1,0 +1,19 @@
+Sun Nov 24 2024 20:55:38 } [PH] error: 
+Invalid `prisma.specialty.findUnique()` invocation:
+
+{
+  where: {
+    id: undefined,
+    isDeleted: false,
+    ~~~~~~~~~
+?   title?: String,
+?   AND?: SpecialtyWhereInput | SpecialtyWhereInput[],
+?   OR?: SpecialtyWhereInput[],
+?   NOT?: SpecialtyWhereInput | SpecialtyWhereInput[],
+?   icon?: StringNullableFilter | String | Null,
+?   DoctorSpecialty?: DoctorSpecialtyListRelationFilter
+  }
+}
+
+Unknown argument `isDeleted`. Available options are marked with ?.
+Sun Nov 24 2024 20:59:7 } [PH] error: _a.includes is not a function

@@ -10,7 +10,7 @@ declare module "express-serve-static-core" {
 const catchAsync = (fn: RequestHandler) => {
   return (req: Request, res: Response, next: NextFunction) => {
     Promise.resolve(fn(req, res, next)).catch((err) => {
-      console.log(err, "errorr in catchAsync ..............");
+      console.log(err, "errorr in catchAsync ");
       next(err);
     });
   };

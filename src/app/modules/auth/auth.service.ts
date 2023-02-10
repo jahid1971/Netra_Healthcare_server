@@ -6,7 +6,7 @@ import { passwordHash } from "../../utls/passwordHash";
 import { jwtToken, TJwtPayload } from "../../utls/jwtToken";
 import config from "../../config";
 import {
-  findById,
+  existsById,
   findUserByEmail,
   findUserById,
   prisma,

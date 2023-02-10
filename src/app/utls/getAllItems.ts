@@ -12,6 +12,7 @@ const getAllItems = async <T>(
         select?: Partial<Record<keyof T, unknown>>;
         include?: Partial<Record<keyof T, unknown>>;
         extraSearchConditions?: Record<string, unknown>[];
+        orderBy?: Record<string, unknown>;
     } = {
         isDeletedCondition: true,
     }
@@ -47,7 +48,6 @@ const getAllItems = async <T>(
             ],
         });
     }
-  
 
     const filterObject = options.filterableFields?.reduce(
         (acc, field) => {
@@ -76,7 +76,7 @@ const getAllItems = async <T>(
         where: whereConditions,
         skip: (page - 1) * limit,
         take: limit,
-        orderBy: { [sortBy]: sortOrder },
+        orderBy: options.orderBy || { [sortBy]: sortOrder },
         ...(options.select && { select: options.select }),
         ...(options.include && { include: options.include }),
     });

@@ -37,7 +37,7 @@ const checkAuth = (...requiredRoles: Array<UserRole>) => {
             throw new AppError(403, "User is deleted !");
 
         if (requiredRoles && !requiredRoles.includes(role as UserRole)) {
-            throw new AppError(401, `No ${role} is allowed for this action except ${requiredRoles}`);
+            throw new AppError(401, `${role} is not allowed for this action except ${requiredRoles}`);
         }
 
         req.user = user;

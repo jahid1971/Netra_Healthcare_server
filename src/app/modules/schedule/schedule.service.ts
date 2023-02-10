@@ -1,5 +1,3 @@
-
-
 import { TSchedule } from "./schedule.validation";
 import { toZonedTime } from "date-fns-tz";
 import { addDays, addMinutes, format } from "date-fns";
@@ -65,10 +63,7 @@ const createSchedule = async (payload: TSchedule): Promise<Schedule[]> => {
     return schedules;
 };
 
-const getAllSchedules = async (
-    query: TQueryObject<Schedule>,
-    user
-) => {
+const getAllSchedules = async (query: TQueryObject<Schedule>, user) => {
     const andConditions = [];
 
     if (query.startDate && query.endDate) {
@@ -82,13 +77,28 @@ const getAllSchedules = async (
         });
     }
 
-    // if (user?.role === UserRole.DOCTOR) {
-
-    // }
-        const result = await getAllItems<Schedule>(prisma.schedule, query, {
-            filterableFields: ["startDateTime", "endDateTime"],
-            andConditions: andConditions,
+    if (user?.role === UserRole.DOCTOR) {
+        const doctorSchedules = await prisma.doctorSchedule.findMany({
+            where: {
+                doctor: { email: user.email },
+            },
         });
+
+        const scheduleIds = doctorSchedules.map(
+            (doctorSchedule) => doctorSchedule.scheduleId
+        );
+
+        andConditions.push({
+            id: {
+                notIn: scheduleIds,
+            },
+        });
+    }
+    
+    const result = await getAllItems<Schedule>(prisma.schedule, query, {
+        filterableFields: ["startDateTime", "endDateTime"],
+        andConditions: andConditions,
+    });
 
     return result;
 };

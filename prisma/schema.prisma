@@ -19,6 +19,7 @@ model User {
   admin              Admin?
   doctor             Doctor?
   patient            Patient?
+  // profileId          String?
 
   @@map("users")
 }
@@ -55,19 +56,21 @@ model Doctor {
   user                User              @relation(fields: [email], references: [email])
   specialties         DoctorSpecialty[]
   DoctorSchedule      DoctorSchedule[]
+  Appointment         Appointment[]
 }
 
 model Patient {
-  id            String   @id @unique @default(uuid())
-  email         String   @unique
+  id            String        @id @unique @default(uuid())
+  email         String        @unique
   name          String
   profilePhoto  String?
   contactNumber String?
   address       String?
-  isDeleted     Boolean  @default(false)
-  createdAt     DateTime @default(now())
-  updatedAt     DateTime @updatedAt
-  user          User     @relation(fields: [email], references: [email])
+  isDeleted     Boolean       @default(false)
+  createdAt     DateTime      @default(now())
+  updatedAt     DateTime      @updatedAt
+  user          User          @relation(fields: [email], references: [email])
+  appointment   Appointment[]
 }
 
 model Specialty {
@@ -93,6 +96,7 @@ model Schedule {
   createdAt      DateTime         @default(now())
   updatedAt      DateTime         @updatedAt
   DoctorSchedule DoctorSchedule[]
+  Appointment    Appointment[]
 }
 
 model DoctorSchedule {
@@ -104,6 +108,34 @@ model DoctorSchedule {
   schedule      Schedule @relation(fields: [scheduleId], references: [id], onDelete: Cascade)
 
   @@id([doctorId, scheduleId])
+}
+
+model Appointment {
+  id             String            @id @default(uuid())
+  patientId      String
+  doctorId       String
+  scheduleId     String
+  videoCallingId String
+  status         AppointmentStatus @default(PENDING)
+  paymentStatus  PaymentStatus     @default(UNPAID)
+  createdAt      DateTime          @default(now())
+  updatedAt      DateTime          @updatedAt
+  patient        Patient           @relation(fields: [patientId], references: [id])
+  doctor         Doctor            @relation(fields: [doctorId], references: [id])
+  schedule       Schedule          @relation(fields: [scheduleId], references: [id])
+  Payment        Payment[]
+}
+
+model Payment {
+  id                 String        @id @default(uuid())
+  appointmentId      String
+  amount             Float
+  transactionId      String        @unique
+  status             PaymentStatus @default(UNPAID)
+  paymentGatewayData Json?
+  createdAt          DateTime      @default(now())
+  updatedAt          DateTime      @updatedAt
+  appointment        Appointment   @relation(fields: [appointmentId], references: [id])
 }
 
 enum UserRole {
@@ -123,4 +155,17 @@ enum UserStatus {
 enum Gender {
   MALE
   FEMALE
+}
+
+enum AppointmentStatus {
+  PENDING
+  SCHEDULED
+  INPROGRESS
+  COMPLETED
+  CANCELED
+}
+
+enum PaymentStatus {
+  PAID
+  UNPAID
 }

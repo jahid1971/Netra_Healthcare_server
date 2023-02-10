@@ -11,7 +11,12 @@ import {
 } from "@prisma/client";
 
 import AppError from "../../errors/AppError";
-import { findUserByEmail, findUserById, prisma } from "../../utls/prismaUtils";
+import {
+    existsById,
+    findUserByEmail,
+    findUserById,
+    prisma,
+} from "../../utls/prismaUtils";
 import { passwordHash } from "../../utls/passwordHash";
 import getAllItems from "../../utls/getAllItems";
 import { TQueryObject } from "../../types/common";
@@ -44,6 +49,19 @@ const createUser = async (
         });
 
         if (role === UserRole.DOCTOR && payload.specialties) {
+            const specialtyPromises = payload.specialties.map(
+                async (specialtyId) => {
+                    await existsById(
+                        prisma.specialty,
+                        specialtyId,
+                        "Specialty",
+                        false
+                    );
+                }
+            );
+
+            await Promise.all(specialtyPromises);
+
             await transactionClient.doctorSpecialty.createMany({
                 data: payload.specialties.map((specialtyId) => ({
                     specialtyId,

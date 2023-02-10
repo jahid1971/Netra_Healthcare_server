@@ -3,7 +3,7 @@ import { DoctorSpecialty } from "./../../../../node_modules/.prisma/client/index
 import { Doctor } from "@prisma/client";
 import {
     deleteUserById,
-    findById,
+    existsById,
     prisma,
     softDeleteUserById,
 } from "../../utls/prismaUtils";
@@ -71,7 +71,7 @@ const updateDoctor = async (
     doctorId: string,
     payload: TUpdateDoctorPayload
 ) => {
-    await findById(prisma.doctor, doctorId, "Doctor");
+    await existsById(prisma.doctor, doctorId, "Doctor");
 
     const { specialties, ...doctorData } = payload;
 

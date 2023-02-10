@@ -4,7 +4,7 @@ import getAllItems from "../../utls/getAllItems";
 
 import {
   deleteUserById,
-  findById,
+  existsById,
   prisma,
   softDeleteUserById,
 } from "../../utls/prismaUtils";
@@ -19,12 +19,12 @@ const getAllLAdmin = async <Admin>(query: TQueryObject) => {
 };
 
 const getAdminById = async (id: string) => {
-  const result = await findById(prisma.admin, id, "Admin");
+  const result = await existsById(prisma.admin, id, "Admin");
   return result;
 };
 
 const updateAdmin = async (id: string, payload: Partial<Admin>) => {
-  await findById(prisma.admin, id);
+  await existsById(prisma.admin, id);
 
   const result = await prisma.admin.update({
     where: { id },

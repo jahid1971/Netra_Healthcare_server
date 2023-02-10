@@ -1,0 +1,16 @@
+Sun Nov 24 2024 21:24:2 } [PH] error: 
+Invalid `prisma.specialty.findUnique()` invocation:
+
+
+PANIC: called `Option::unwrap()` on a `None` value
+Sun Nov 24 2024 21:24:39 } [PH] error: 
+Invalid `prisma.specialty.findUnique()` invocation:
+
+
+PANIC: called `Option::unwrap()` on a `None` value
+Sun Nov 24 2024 21:27:23 } [PH] error: Specialty  not found
+Sun Nov 24 2024 21:27:53 } [PH] error: Specialty  not found
+Sun Nov 24 2024 21:30:21 } [PH] error: Specialty  not found
+Sun Nov 24 2024 21:32:50 } [PH] error: Specialty  not found
+Sun Nov 24 2024 21:33:12 } [PH] error: Specialty  not found
+Sun Nov 24 2024 21:41:37 } [PH] error: No Specialty found
