@@ -57,20 +57,22 @@ model Doctor {
   specialties         DoctorSpecialty[]
   DoctorSchedule      DoctorSchedule[]
   Appointment         Appointment[]
+  Prescription        Prescription[]
 }
 
 model Patient {
-  id            String        @id @unique @default(uuid())
-  email         String        @unique
+  id            String         @id @unique @default(uuid())
+  email         String         @unique
   name          String
   profilePhoto  String?
   contactNumber String?
   address       String?
-  isDeleted     Boolean       @default(false)
-  createdAt     DateTime      @default(now())
-  updatedAt     DateTime      @updatedAt
-  user          User          @relation(fields: [email], references: [email])
+  isDeleted     Boolean        @default(false)
+  createdAt     DateTime       @default(now())
+  updatedAt     DateTime       @updatedAt
+  user          User           @relation(fields: [email], references: [email])
   appointment   Appointment[]
+  Prescription  Prescription[]
 }
 
 model Specialty {
@@ -124,6 +126,7 @@ model Appointment {
   doctor         Doctor            @relation(fields: [doctorId], references: [id])
   schedule       Schedule          @relation(fields: [scheduleId], references: [id])
   Payment        Payment[]
+  Prescription   Prescription[]
 }
 
 model Payment {
@@ -136,6 +139,35 @@ model Payment {
   createdAt          DateTime      @default(now())
   updatedAt          DateTime      @updatedAt
   appointment        Appointment   @relation(fields: [appointmentId], references: [id])
+}
+
+model Prescription {
+  id            String       @id @default(uuid())
+  appointmentId String
+  doctorId      String
+  patientId     String
+  issuedAt      DateTime?
+  medications   Medication[]
+  followUpDate  DateTime?
+  notes         String?
+  createdAt     DateTime     @default(now())
+  updatedAt     DateTime     @updatedAt
+
+  appointment Appointment @relation(fields: [appointmentId], references: [id])
+  doctor      Doctor      @relation(fields: [doctorId], references: [id])
+  patient     Patient     @relation(fields: [patientId], references: [id])
+}
+
+model Medication {
+  id             String  @id @default(uuid())
+  prescriptionId String
+  name           String
+  dosage         String
+  frequency      String
+  duration       String
+  instructions   String?
+
+  prescription Prescription @relation(fields: [prescriptionId], references: [id])
 }
 
 enum UserRole {
