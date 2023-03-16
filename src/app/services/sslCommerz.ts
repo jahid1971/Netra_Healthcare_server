@@ -1,5 +1,3 @@
-/* eslint-disable @typescript-eslint/no-explicit-any */
-import axios from "axios";
 import config from "../config";
 import AppError from "../errors/AppError";
 // @ts-expect-error: SSLCommerzPayment does not have type definitions

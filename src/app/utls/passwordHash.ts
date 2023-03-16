@@ -23,7 +23,7 @@ const comparePassword = async (
     }
 };
 
-export const passwordHash = {
+export const processPassword = {
     hashPassword,
     comparePassword,
 };

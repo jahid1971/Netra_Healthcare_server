@@ -16,17 +16,20 @@ const medicationSchema = z.object({
     instructions: z.string().optional(),
 });
 
-const prescriptionSchema = z.object({
-    appointmentId: z.string({
-        required_error: "Appointment ID is required",
-    }),
-    issuedAt: z.string().optional(),
-
-    medications: z.array(medicationSchema).nonempty({
-        message: "At least one medication is required",
-    }),
-    notes: z.string().optional(),
-});
+const prescriptionSchema = z
+    .object({
+        appointmentId: z.string({
+            required_error: "Appointment ID is required",
+        }),
+        issuedAt: z.string().optional(),
+        recommendedLabTests: z.string().optional(),
+        diagnosis: z.string({}),
+        medications: z.array(medicationSchema).nonempty({
+            message: "At least one medication is required",
+        }),
+        note: z.string().optional(),
+    })
+    .strict();
 
 export type TPrescription = z.infer<typeof prescriptionSchema>;
 

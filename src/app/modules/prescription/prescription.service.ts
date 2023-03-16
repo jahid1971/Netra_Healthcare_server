@@ -1,5 +1,12 @@
-import { Medication, PaymentStatus, Prescription, User } from "@prisma/client";
-import { prisma } from "../../utls/prismaUtils";
+import {
+    Doctor,
+    Medication,
+    Patient,
+    PaymentStatus,
+    Prescription,
+    User,
+} from "@prisma/client";
+import { prisma } from "../../services/prisma.service";
 import AppError from "../../errors/AppError";
 import { TPrescription } from "./prescription.validation";
 import getAllItems from "../../utls/getAllItems";
@@ -7,6 +14,8 @@ import { TQueryObject } from "../../types/common";
 
 type TPrescriptionWithMedications = Prescription & {
     medications: Medication[];
+    doctor: Doctor;
+    patient: Patient;
 };
 
 const createPrescription = async (user: User, data: TPrescription) => {
@@ -69,6 +78,8 @@ const getPatientPrescriptions = async (query: TQueryObject) => {
             filterableFields: ["appointmentId"],
             include: {
                 medications: true,
+                doctor: true,
+                patient: { include: { patientMedicalHistory: true } },
             },
         }
     );

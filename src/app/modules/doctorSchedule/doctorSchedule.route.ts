@@ -15,6 +15,12 @@ router.post(
 );
 
 router.get(
+    "/",
+    checkAuth(UserRole.PATIENT, UserRole.ADMIN, UserRole.SUPER_ADMIN),
+    DoctorScheduleController.getDoctorSchedules
+);
+
+router.get(
     "/my-schedules",
     checkAuth(UserRole.DOCTOR),
     DoctorScheduleController.getMySchedules

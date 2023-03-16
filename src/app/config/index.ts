@@ -38,4 +38,9 @@ export default {
         is_live: process.env.SSL_IS_LIVE,
     },
     base_url: process.env.BASE_URL,
+    super_admin: {
+        email: process.env.SUPER_ADMIN_EMAIL,
+        password: process.env.SUPER_ADMIN_PASSWORD,
+        name: process.env.SUPER_ADMIN_NAME,
+    },
 };

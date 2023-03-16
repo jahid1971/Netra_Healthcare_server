@@ -12,7 +12,14 @@ const getAllSchedules = catchAsync(async (req, res) => {
     sendSuccessResponse(res, result, "All schedules fetched successfully", 200);
 });
 
+const deleteSchedule = catchAsync(async (req, res) => {
+    const result = await ScheduleService.deleteSchedule(req?.body);
+
+    sendSuccessResponse(res, result, "Schedule deleted Successfully");
+});
+
 export const ScheduleController = {
     createSchedule,
     getAllSchedules,
+    deleteSchedule,
 };

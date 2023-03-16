@@ -3,15 +3,33 @@ import { userController } from "./user.controller";
 import { handleImageUpload } from "../../middleWares/handleImageUpload";
 import checkAuth from "../../middleWares/checkAuth";
 import { UserRole } from "@prisma/client";
-import { userRole } from "../../constants/user";
+import validateRequest from "../../middleWares/validateRequest";
+import { UserValidation } from "./user.validation";
 
 const router = express.Router();
 
-router.post("/create-admin", handleImageUpload, userController.createAdmin);
+router.post(
+    "/create-admin",
+    checkAuth(UserRole.SUPER_ADMIN, UserRole.ADMIN),
+    handleImageUpload,
+    validateRequest(UserValidation.createAdmin),
+    userController.createAdmin
+);
 
-router.post("/create-doctor", handleImageUpload, userController.createDoctor);
+router.post(
+    "/create-doctor",
+    checkAuth(UserRole.SUPER_ADMIN, UserRole.ADMIN),
+    handleImageUpload,
+    validateRequest(UserValidation.createDoctor),
+    userController.createDoctor
+);
 
-router.post("/create-patient", handleImageUpload, userController.createPatient);
+router.post(
+    "/create-patient",
+    handleImageUpload,
+    validateRequest(UserValidation.createPatient),
+    userController.createPatient
+);
 
 router.get("/", userController.getAllUsers);
 
@@ -28,7 +46,8 @@ router.get(
 
 router.patch(
     "/change-status/:id",
-    checkAuth(UserRole.SUPER_ADMIN, userRole.ADMIN),
+    validateRequest(UserValidation.updateStatus),
+    checkAuth(UserRole.SUPER_ADMIN, UserRole.ADMIN),
     userController.changeUserStatus
 );
 export const userRoutes = router;

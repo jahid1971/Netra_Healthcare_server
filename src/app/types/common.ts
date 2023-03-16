@@ -1,9 +1,7 @@
 /* eslint-disable @typescript-eslint/no-empty-object-type */
-import { TQueryObject } from "./common";
-/* eslint-disable @typescript-eslint/no-explicit-any */
 
-import { User, UserRole } from "@prisma/client";
-import { Request } from "express";
+import {  UserRole } from "@prisma/client";
+
 
 export interface IErrorIssue {
     path?: string;
@@ -30,12 +28,18 @@ export type TQueryObject<T = {}> = {
     [key: string]: any;
 } & Partial<T>;
 
-export interface ICustomRequest extends Request {
-    user: User | null;
-}
 
-// export type TAuthUser = {
-//     userId: string;
-//     email: string;
-//     role: UserRole;
-// } | null;
+
+export type TAuthUser = {
+    userId: string;
+    email: string;
+    role: UserRole;
+};
+
+export type TChatMessage = {
+    id: string;
+    senderId: string;
+    receiverId: string;
+    message: string;
+    createdAt: Date;
+};

@@ -1,4 +1,3 @@
-/* eslint-disable @typescript-eslint/no-explicit-any */
 import {
     Appointment,
     AppointmentStatus,
@@ -6,12 +5,12 @@ import {
     User,
     UserRole,
 } from "@prisma/client";
-import { existsById, prisma } from "../../utls/prismaUtils";
+import { existsById, prisma } from "../../services/prisma.service";
 import AppError from "../../errors/AppError";
 import { v4 as uuidv4 } from "uuid";
 import { sslService } from "../../services/sslCommerz";
 import getAllItems from "../../utls/getAllItems";
-import { TQueryObject } from "../../types/common";
+import {  TQueryObject } from "../../types/common";
 
 const createAppointment = async (data: Appointment, user: User) => {
     const isDoctorExists = await existsById(
@@ -29,9 +28,11 @@ const createAppointment = async (data: Appointment, user: User) => {
         where: {
             doctorId: data.doctorId,
             scheduleId: data.scheduleId,
-            isBooked: false,
         },
     });
+
+    if (isDoctorScheduleExists?.isBooked)
+        throw new AppError(400, "This schedule is already booked");
 
     if (!isDoctorScheduleExists) {
         throw new AppError(404, "Doctor schedule not found!");
@@ -88,7 +89,7 @@ const createAppointment = async (data: Appointment, user: User) => {
 };
 
 // get my appointments...........................................................................................
-const getMyAppointments = async (user: User, query: TQueryObject) => {
+const getAllAppointments = async (user: User, query: TQueryObject) => {
     const andCondtion = [];
 
     if (user.role === UserRole.DOCTOR) {
@@ -97,7 +98,8 @@ const getMyAppointments = async (user: User, query: TQueryObject) => {
                 email: user.email,
             },
         });
-    } else {
+    }
+    if (user.role === UserRole.PATIENT) {
         andCondtion.push({
             patient: {
                 email: user.email,
@@ -105,38 +107,113 @@ const getMyAppointments = async (user: User, query: TQueryObject) => {
         });
     }
 
-    andCondtion.push({
-        status: {
-            not: AppointmentStatus.PENDING,
-        },
-    });
+    (user.role === UserRole.DOCTOR || user.role === UserRole.PATIENT) &&
+        andCondtion.push({
+            status: {
+                not: AppointmentStatus.PENDING,
+            },
+        });
 
-    const myAppointments = await getAllItems<any>(prisma.appointment, query, {
+    if (query.startDate || query.endDate) {
+        query.schedule = {
+            ...(query.startDate && { startDateTime: { gte: query.startDate } }),
+            ...(query.endDate && { endDateTime: { lte: query.endDate } }),
+        };
+
+        delete query.startDate;
+        delete query.endDate;
+    }
+    const orderBy =
+        query.sortOrder === "asc"
+            ? { schedule: { startDateTime: "asc" } }
+            : { schedule: { startDateTime: "desc" } };
+
+    console.log(query, "query -------------------------------");
+
+    const searchCondition = [];
+    if (query.searchTerm) {
+        searchCondition.push({
+            doctor: {
+                name: {
+                    contains: query.searchTerm,
+                    mode: "insensitive",
+                },
+            },
+        });
+
+        searchCondition.push({
+            patient: {
+                name: {
+                    contains: query.searchTerm,
+                    mode: "insensitive",
+                },
+            },
+        });
+    }
+
+    const allApointments = await getAllItems<any>(prisma.appointment, query, {
         andConditions: andCondtion,
-        filterableFields: ["status", "doctorId", "patientId", "scheduleId"],
+        filterableFields: [
+            "schedule",
+            "status",
+            "doctorId",
+            "patientId",
+            "scheduleId",
+            "videoCallingId",
+        ],
         include:
             user.role === UserRole.DOCTOR
-                ? { patient: true, schedule: true }
-                : { doctor: true, schedule: true },
+                ? {
+                      patient: { include: { patientMedicalHistory: true } },
+                      schedule: true,
+                  }
+                : user.role === UserRole.PATIENT
+                  ? { doctor: true, schedule: true }
+                  : {
+                        doctor: true,
+                        patient: true,
+                        schedule: true,
+                    },
+        orderBy: orderBy,
+
+        extraSearchConditions: searchCondition,
+        isDeletedCondition: false,
     });
 
-    return myAppointments;
+    return allApointments;
 };
 
 // get all appointments........................................................................................
-const getAllAppointments = async (query: TQueryObject) => {
-    const appointments = await getAllItems<any>(prisma.appointment, query, {
-        include: {
-            doctor: true,
-            patient: true,
-            schedule: true,
-        },
-    });
+// const getAllAppointments = async (query: TQueryObject, user: TAuthUser) => {
+//     const orderBy =
+//         query.sortOrder === "asc"
+//             ? { schedule: { startDateTime: "asc" } }
+//             : { schedule: { startDateTime: "desc" } };
 
-    return appointments;
-};
+//     const appointments = await getAllItems<any>(prisma.appointment, query, {
+//         filterableFields: [
+//             "schedule",
+//             "status",
+//             "doctorId",
+//             "patientId",
+//             "scheduleId",
+//             "videoCallingId",
+//         ],
+//         include: {
+//             doctor: true,
+//             patient: true,
+//             schedule: true,
+//         },
+//         orderBy: orderBy,
+//         isDeletedCondition: false,
+//     });
 
-// change appointment status.....................................................................................
+//     console.log(appointments, "appointments --------------------------------");
+
+//     return appointments;
+// };
+
+// change appointment status........................................................
 
 const changeAppointmentStatus = async (
     appointmentId: string,
@@ -145,7 +222,7 @@ const changeAppointmentStatus = async (
 ) => {
     const appointment = await prisma.appointment.findUnique({
         where: { id: appointmentId, paymentStatus: PaymentStatus.PAID },
-        include: { doctor: true },
+        include: { doctor: true, patient: true },
     });
 
     if (!appointment) {
@@ -153,8 +230,10 @@ const changeAppointmentStatus = async (
     }
 
     if (
-        user.role === UserRole.DOCTOR &&
-        appointment.doctor.email !== user.email
+        (user.role === UserRole.DOCTOR &&
+            appointment.doctor.email !== user.email) ||
+        (user.role === UserRole.PATIENT &&
+            appointment.patient.email !== user.email)
     ) {
         throw new AppError(
             403,
@@ -162,11 +241,10 @@ const changeAppointmentStatus = async (
         );
     }
 
-    if (user.role === UserRole.DOCTOR)
-        await prisma.appointment.update({
-            where: { id: appointmentId },
-            data: { status },
-        });
+    await prisma.appointment.update({
+        where: { id: appointmentId },
+        data: { status },
+    });
 
     return {
         message: "Appointment status changed successfully",
@@ -222,16 +300,12 @@ const cleanUnpaidAppointments = async () => {
             });
         }
 
-        console.info(
-            "Unpaid appointments cleaned successfully:",
-            unpaidAppointmentIds
-        );
     });
 };
 
 export const AppointmentService = {
     createAppointment,
-    getMyAppointments,
+
     getAllAppointments,
     changeAppointmentStatus,
     cleanUnpaidAppointments,

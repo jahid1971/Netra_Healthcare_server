@@ -1,4 +1,3 @@
-/* eslint-disable @typescript-eslint/no-explicit-any */
 import { DoctorSpecialty } from "./../../../../node_modules/.prisma/client/index.d";
 import { Doctor } from "@prisma/client";
 import {
@@ -6,7 +5,7 @@ import {
     existsById,
     prisma,
     softDeleteUserById,
-} from "../../utls/prismaUtils";
+} from "../../services/prisma.service";
 import getAllItems from "../../utls/getAllItems";
 import { TQueryObject } from "../../types/common";
 import {
@@ -14,8 +13,9 @@ import {
     doctorSearchableFileds,
 } from "./doctor.constants";
 import { TUpdateDoctorPayload } from "./doctor.validation";
+import { sendImageToCloudinary } from "../../services/sendImageToCloudinary";
 
-const getAllDoctors = async (query: TQueryObject) => {
+const getAllDoctors = async (query: TQueryObject<Doctor>) => {
     const andConditions = [];
 
     const specialtyIds = Array.isArray(query.specialties)
@@ -50,6 +50,14 @@ const getAllDoctors = async (query: TQueryObject) => {
         });
     }
 
+    if (query.maxFees) {
+        andConditions.push({ apointmentFee: { lte: Number(query.maxFees) } });
+    }
+
+    if (query.minFees) {
+        andConditions.push({ apointmentFee: { gte: Number(query.minFees) } });
+    }
+
     const result = await getAllItems<
         Doctor & { specialties: DoctorSpecialty[] }
     >(prisma.doctor, query, {
@@ -64,19 +72,50 @@ const getAllDoctors = async (query: TQueryObject) => {
         extraSearchConditions: searchConditions,
     });
 
-    return result;
+    const allDoctors = result?.data?.map((doctor) => {
+        return {
+            ...doctor,
+            specialties: doctor.specialties.map(
+                (specialty: any) => specialty.specialty
+            ),
+        };
+    });
+
+    return { ...result, data: allDoctors };
 };
 
 const updateDoctor = async (
     doctorId: string,
-    payload: TUpdateDoctorPayload
+    payload: TUpdateDoctorPayload,
+    file: any
 ) => {
     await existsById(prisma.doctor, doctorId, "Doctor");
+
+
+    if (!payload) payload = {};
+
+    if (file) {
+        const uploadedImage = await sendImageToCloudinary(
+            `doctor-${doctorId}`,
+            file?.buffer
+        );
+
+        payload.profilePhoto = uploadedImage?.secure_url;
+    }
 
     const { specialties, ...doctorData } = payload;
 
     await prisma.$transaction(async (transactionClient: any) => {
         if (specialties && specialties.length) {
+            const existingSpecialties =
+                await transactionClient.specialty.findMany({
+                    where: { id: { in: specialties } },
+                });
+
+            if (existingSpecialties.length !== specialties?.length) {
+                throw new Error("One or more specialties do not exist.");
+            }
+
             await transactionClient.doctorSpecialty.deleteMany({
                 where: { doctorId },
             });
@@ -106,11 +145,33 @@ const updateDoctor = async (
 
     return responseData;
 };
+// get singleDoctor by id.............
+
+const getDoctorById = async (doctorId: string) => {
+    const result = await prisma.doctor.findUnique({
+        where: { id: doctorId },
+        include: {
+            specialties: {
+                select: { specialty: true },
+            },
+        },
+    });
+
+    return {
+        ...result,
+        specialties: result?.specialties.map(
+            (specialty) => specialty.specialty
+        ),
+    };
+};
+
+// delete doctor by id..............
 
 const deleteDocotr = async (doctorId: string) => {
     return await deleteUserById("doctor", doctorId);
 };
 
+// soft delete doctor by id............
 const softDeleteDoctor = async (doctorId: string) => {
     return await softDeleteUserById("doctor", doctorId);
 };
@@ -118,6 +179,7 @@ const softDeleteDoctor = async (doctorId: string) => {
 export const DoctorService = {
     updateDoctor,
     getAllDoctors,
+    getDoctorById,
     deleteDocotr,
     softDeleteDoctor,
 };

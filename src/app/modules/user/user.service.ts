@@ -1,6 +1,3 @@
-/* eslint-disable @typescript-eslint/no-explicit-any */
-/* eslint-disable no-unused-vars */
-/* eslint-disable @typescript-eslint/no-unused-vars */
 import {
     Admin,
     Doctor,
@@ -16,8 +13,8 @@ import {
     findUserByEmail,
     findUserById,
     prisma,
-} from "../../utls/prismaUtils";
-import { passwordHash } from "../../utls/passwordHash";
+} from "../../services/prisma.service";
+import { processPassword } from "../../utls/passwordHash";
 import getAllItems from "../../utls/getAllItems";
 import { TQueryObject } from "../../types/common";
 
@@ -29,7 +26,7 @@ const createUser = async (
     const user = await findUserByEmail(payload.email);
     if (user) throw new AppError(400, "User already exists");
 
-    const hashedPassword = await passwordHash.hashPassword(
+    const hashedPassword = await processPassword.hashPassword(
         payload.password as string
     );
 
@@ -77,6 +74,11 @@ const createUser = async (
 };
 
 const createAdmin = async (payload: User & Admin) => {
+    console.log(
+        "payload",
+        payload,
+        "payload .................________________________________________________________________"
+    );
     return createUser(payload, UserRole.ADMIN, "admin");
 };
 const createDoctor = async (payload: User & Doctor) => {
@@ -107,19 +109,43 @@ const getAllUsers = async (query: TQueryObject) => {
     return result;
 };
 
-const getMyProfile = async (user: User) => {
-    const myProfile = await prisma.user.findUnique({
-        where: { id: user.id },
-        select: {
-            email: true,
-            role: true,
-            needPasswordChange: true,
-            status: true,
-            ...(user.role === UserRole.ADMIN && { admin: true }),
-            ...(user.role === UserRole.DOCTOR && { doctor: true }),
-            ...(user.role === UserRole.PATIENT && { patient: true }),
+const getMyProfile = async (userData: User) => {
+    const user = await prisma.user.findUnique({
+        where: { id: userData?.id },
+        include: {
+            admin:
+                userData?.role === UserRole.ADMIN ||
+                userData?.role === UserRole.SUPER_ADMIN,
+            doctor: userData?.role === UserRole.DOCTOR && {
+                include: {
+                    specialties: {
+                        select: {
+                            specialty: true,
+                        },
+                    },
+                },
+            },
+            patient: userData?.role === UserRole.PATIENT,
         },
     });
+
+    if (!user) throw new AppError(404, "User profile not found");
+
+    const myProfile = {
+        ...(user.admin && { ...user.admin, adminId: user.admin.id }),
+        ...(user.doctor && {
+            ...user.doctor,
+            doctorId: user.doctor.id,
+            specialties: (user.doctor as any).specialties?.map(
+                (s: any) => s.specialty
+            ),
+        }),
+        ...(user.patient && { ...user.patient, patientId: user.patient.id }),
+        id: user.id,
+        role: user.role,
+        needPasswordChange: user.needPasswordChange,
+        status: user.status,
+    };
 
     return myProfile;
 };

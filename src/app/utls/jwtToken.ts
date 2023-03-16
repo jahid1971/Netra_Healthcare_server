@@ -1,5 +1,3 @@
-/* eslint-disable no-console */
-/* eslint-disable @typescript-eslint/no-explicit-any */
 import jwt, { Secret } from "jsonwebtoken";
 import AppError from "../errors/AppError";
 import { UserRole } from "@prisma/client";

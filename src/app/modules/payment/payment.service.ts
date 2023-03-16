@@ -1,7 +1,5 @@
-/* eslint-disable no-console */
-/* eslint-disable @typescript-eslint/no-explicit-any */
 import { AppointmentStatus, PaymentStatus } from "@prisma/client";
-import { prisma } from "../../utls/prismaUtils";
+import { prisma } from "../../services/prisma.service";
 import { sslService } from "../../services/sslCommerz";
 import config from "../../config";
 

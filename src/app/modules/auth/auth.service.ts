@@ -1,16 +1,15 @@
-/* eslint-disable @typescript-eslint/no-explicit-any */
 
 import AppError from "../../errors/AppError";
-import { passwordHash } from "../../utls/passwordHash";
+import { processPassword } from "../../utls/passwordHash";
 
 import { jwtToken, TJwtPayload } from "../../utls/jwtToken";
 import config from "../../config";
 import {
-  existsById,
+ 
   findUserByEmail,
   findUserById,
   prisma,
-} from "../../utls/prismaUtils";
+} from "../../services/prisma.service";
 import { User, UserRole } from "@prisma/client";
 import emailSender from "../../services/emailSender";
 import oauth2Client from "../../services/googleClient";
@@ -19,6 +18,8 @@ import axios from "axios";
 // logIn......................logIn
 
 const logIn = async (payload: { email: string; password: string }) => {
+
+
   const user = await findUserByEmail(payload.email);
 
   if (!user) {
@@ -28,9 +29,9 @@ const logIn = async (payload: { email: string; password: string }) => {
   const plainPassword = payload.password;
   const hashedPassword = user.password;
 
-  const isPasswordMatched = await passwordHash.comparePassword(
+  const isPasswordMatched = await processPassword.comparePassword(
     plainPassword,
-    hashedPassword,
+    hashedPassword as string,
   );
 
   if (!isPasswordMatched) throw new AppError(404, "Invalid password");
@@ -66,20 +67,20 @@ const changePassword = async (
   user: User,
   payload: { oldPassword: string; newPassword: string },
 ) => {
-  const isPasswordMatched = await passwordHash.comparePassword(
+  const isPasswordMatched = await processPassword.comparePassword(
     payload.oldPassword,
     user.password as string,
   );
   if (!isPasswordMatched) throw new AppError(401, "Old Password Is Incorrect");
 
-  const isOldAdnNewPasswordSame = await passwordHash.comparePassword(
+  const isOldAdnNewPasswordSame = await processPassword.comparePassword(
     payload.newPassword,
     user?.password as string,
   );
   if (isOldAdnNewPasswordSame)
     throw new AppError(400, "New password can't be same as old password");
 
-  const hashedPassword = await passwordHash.hashPassword(payload.newPassword);
+  const hashedPassword = await processPassword.hashPassword(payload.newPassword);
 
   const result = await prisma.user.update({
     where: { id: user.id },
@@ -137,7 +138,7 @@ const resetPassword = async (payload: {
 
   if (!isTokenValid) throw new AppError(401, "Something went wrong");
 
-  const hashedPassword = await passwordHash.hashPassword(payload.newPassword);
+  const hashedPassword = await processPassword.hashPassword(payload.newPassword);
 
   const result = await prisma.user.update({
     where: { id: user.id },

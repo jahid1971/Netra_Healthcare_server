@@ -4,7 +4,7 @@ import { IGenericErrorResponse } from "../types/common";
 const handleValidationError = (
   error: Prisma.PrismaClientValidationError,
 ): IGenericErrorResponse => {
-  console.log(error.message, "error in validation error.................");
+  console.log(error.message, "error in prisma validation error.................");
 
   return {
     statusCode: 400,

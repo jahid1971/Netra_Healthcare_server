@@ -1,0 +1,5 @@
+Sun Mar 02 2025 1:0:0 } [PH] error: 
+Invalid `prisma.appointment.deleteMany()` invocation:
+
+
+Foreign key constraint violated: `Prescription_appointmentId_fkey (index)`

@@ -1,18 +1,14 @@
-/* eslint-disable @typescript-eslint/no-explicit-any */
 import { Request, Response } from "express";
 import catchAsync from "../../utls/catchAsync";
 import sendSuccessResponse from "../../utls/sendSuccessResponse";
 import { authServices } from "./auth.service";
-import { User } from "@prisma/client";
 import config from "../../config";
 
-interface ICustomRequest extends Request {
-  user?: User;
-}
 
 const logIn = catchAsync(async (req, res) => {
   const { accessToken, refreshToken, needPasswordChange } =
     await authServices.logIn(req.body);
+ 
 
   res.cookie("accessToken", accessToken);
   res.cookie("refreshToken", refreshToken, {
@@ -20,6 +16,8 @@ const logIn = catchAsync(async (req, res) => {
     secure: config.NODE_ENV === "production",
   });
   const data = {
+    accessToken,
+    refreshToken,
     needPasswordChange,
   };
   sendSuccessResponse(res, data, "User logged in successfully");
@@ -48,7 +46,7 @@ const refresh = catchAsync(async (req, res) => {
 
   const { accessToken } = await authServices.refresh(refreshToken);
 
-  console.log(accessToken, "accessToken");
+  console.log(accessToken, "accessToken in refresh");
 
   res.cookie("accessToken", accessToken);
   sendSuccessResponse(res, {}, "Token refreshed successfully");

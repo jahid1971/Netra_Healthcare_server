@@ -1,5 +1,4 @@
 import { TQueryObject } from "./../types/common";
-/* eslint-disable @typescript-eslint/no-explicit-any */
 
 const getAllItems = async <T>(
     Model: any,
@@ -12,9 +11,8 @@ const getAllItems = async <T>(
         select?: Partial<Record<keyof T, unknown>>;
         include?: Partial<Record<keyof T, unknown>>;
         extraSearchConditions?: Record<string, unknown>[];
+        // orderBy?: Partial<Record<keyof T, string>>;
         orderBy?: Record<string, unknown>;
-    } = {
-        isDeletedCondition: true,
     }
 ): Promise<{
     data: T[];
@@ -29,7 +27,8 @@ const getAllItems = async <T>(
 
     if (options.andConditions) andConditions.push(...options.andConditions);
 
-    if (options.isDeletedCondition) andConditions.push({ isDeleted: false });
+    if (!(options.isDeletedCondition === false))
+        andConditions.push({ isDeleted: false });
 
     if (
         query.searchTerm &&
@@ -51,26 +50,42 @@ const getAllItems = async <T>(
 
     const filterObject = options.filterableFields?.reduce(
         (acc, field) => {
-            if (query[field]) acc[field] = query[field];
+            if (query[field] !== undefined) acc[field] = query[field];
             return acc;
         },
         {} as Record<keyof T, unknown>
     );
 
+    // if (filterObject && Object.keys(filterObject).length > 0) {
+    //     andConditions.push({
+    //         AND: Object.keys(filterObject).map((key) => {
+    //             return {
+    //                 [key]: {
+    //                     equals: (filterObject as any)[key],
+    //                 },
+    //             };
+    //         }),
+    //     });
+    // }
+
     if (filterObject && Object.keys(filterObject).length > 0) {
-        andConditions.push({
-            AND: Object.keys(filterObject).map((key) => {
-                return {
-                    [key]: {
-                        equals: (filterObject as any)[key],
-                    },
-                };
-            }),
+        Object.keys(filterObject).forEach((key) => {
+            const fieldValue = (filterObject as any)[key];
+
+            if (typeof fieldValue === "object" && fieldValue !== null) {
+                andConditions.push({
+                    [key]: fieldValue,
+                });
+            } else {
+                andConditions.push({
+                    [key]: { equals: fieldValue },
+                });
+            }
         });
     }
 
     const whereConditions =
-        andConditions.length > 0 ? { AND: andConditions } : {};
+        andConditions.length > 0 ? { AND: andConditions } : undefined;
 
     const result = await Model.findMany({
         where: whereConditions,

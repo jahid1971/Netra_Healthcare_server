@@ -2,6 +2,7 @@ import catchAsync from "../../utls/catchAsync";
 import sendSuccessResponse from "../../utls/sendSuccessResponse";
 import { adminService } from "./admin.service";
 
+
 const getAllAdmin = catchAsync(async (req, res) => {
   const result = await adminService.getAllLAdmin(req.query);
   sendSuccessResponse(res, result, "All Admins fetched successfully");

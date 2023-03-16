@@ -1,18 +1,18 @@
-/* eslint-disable @typescript-eslint/no-explicit-any */
 import AppError from "../errors/AppError";
 
 import catchAsync from "../utls/catchAsync";
 import { jwtToken } from "../utls/jwtToken";
 import config from "../config";
 import { User, UserRole } from "@prisma/client";
-import { prisma } from "../utls/prismaUtils";
+import { prisma } from "../services/prisma.service";
+
 
 const checkAuth = (...requiredRoles: Array<UserRole>) => {
     return catchAsync(async (req, res, next) => {
-        const token = req.cookies.accessToken;
+        const token = req.cookies.accessToken || req.headers.authorization;
 
         if (!token) {
-            throw new AppError(401, "Unauthorized access");
+            throw new AppError(401, "You are not authenticated !");
         }
 
         const decodedToken = jwtToken.verifyToken(
@@ -37,7 +37,7 @@ const checkAuth = (...requiredRoles: Array<UserRole>) => {
             throw new AppError(403, "User is deleted !");
 
         if (requiredRoles && !requiredRoles.includes(role as UserRole)) {
-            throw new AppError(401, `${role} is not allowed for this action except ${requiredRoles}`);
+            throw new AppError(401, `${role} is not allowed for this action`);
         }
 
         req.user = user;

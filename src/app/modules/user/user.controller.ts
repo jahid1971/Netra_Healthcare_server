@@ -1,4 +1,4 @@
-import { ICustomRequest } from "../../types/common";
+
 import catchAsync from "../../utls/catchAsync";
 import sendSuccessResponse from "../../utls/sendSuccessResponse";
 import { userService } from "./user.service";

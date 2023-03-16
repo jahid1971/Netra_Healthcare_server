@@ -1,34 +1,28 @@
 import { Response } from "express";
 
 export type TMetaData = {
-  total: number;
-  page: number;
-  limit: number;
-  totalPages: number;
+    total: number;
+    page: number;
+    limit: number;
+    totalPages: number;
 };
-export type TResponse<T> = {
-  success: boolean;
-  statusCode: number;
-  message: string;
-  data: T;
-  metaData?: TMetaData;
-};
-const sendSuccessResponse = <T>(
-  res: Response,
-  data: T,
-  message: string,
-  statusCode: number = 200,
-  metaData?: TMetaData,
-) => {
-  const responseData: TResponse<T> = {
-    success: true,
-    statusCode: statusCode,
-    message: message,
-    data: data,
-    metaData: metaData,
-  };
 
-  return res.status(statusCode).json(responseData);
+const sendSuccessResponse = (
+    res: Response,
+    data: any,
+    message: string,
+    statusCode: number = 200,
+    meta?: TMetaData
+) => {
+    const responseData = {
+        success: true,
+        statusCode: statusCode,
+        message: message,
+        data: data?.data || data,
+        meta: data?.meta || meta || undefined,
+    };
+    console.log(message);
+    return res.status(statusCode).json(responseData);
 };
 
 export default sendSuccessResponse;

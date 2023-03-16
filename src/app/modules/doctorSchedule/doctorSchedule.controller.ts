@@ -24,6 +24,11 @@ const getMySchedules = catchAsync(async (req, res) => {
     sendSuccessResponse(res, result, "Doctor Schedules fetched successfully");
 });
 
+const getDoctorSchedules = catchAsync(async (req, res) => {
+    const result = await DoctorScheduleService.getDoctorSchedules(req.query);
+    sendSuccessResponse(res, result, "Doctor Schedules fetched successfully");
+});
+
 const deleteDocotrSchedule = catchAsync(async (req, res) => {
     const result = await DoctorScheduleService.deleteDocotrSchedule(
         req.user,
@@ -31,10 +36,11 @@ const deleteDocotrSchedule = catchAsync(async (req, res) => {
     );
 
     sendSuccessResponse(res, result, "Doctor Schedules deleted successfully");
-})
+});
 
 export const DoctorScheduleController = {
     createDoctorSchedule,
     getMySchedules,
+    getDoctorSchedules,
     deleteDocotrSchedule,
 };

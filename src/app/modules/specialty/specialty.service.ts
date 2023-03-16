@@ -1,11 +1,11 @@
 import { Specialty } from "@prisma/client";
-import { prisma } from "../../utls/prismaUtils";
+import { prisma } from "../../services/prisma.service";
 import AppError from "../../errors/AppError";
+import getAllItems from "../../utls/getAllItems";
+import { TQueryObject } from "../../types/common";
+import { sendImageToCloudinary } from "../../services/sendImageToCloudinary";
 
-const createSpecialty = async (
-    specialtyData: Specialty,
-    specialtyIcon: string
-) => {
+const createSpecialty = async (specialtyData: Specialty, file: any) => {
     const specialty = await prisma.specialty.findUnique({
         where: { title: specialtyData.title },
     });
@@ -13,14 +13,37 @@ const createSpecialty = async (
     if (specialty) {
         throw new AppError(400, `${specialtyData.title} already exists`);
     }
-    
+
+    let imgUrl: string | null = null;
+
+    if (file) {
+        const fileName = file?.originalname;
+
+        const uploadedImage = await sendImageToCloudinary(
+            `${fileName || `specialty`}_${specialtyData.title}`,
+            file?.buffer
+        );
+
+        imgUrl = uploadedImage?.secure_url;
+        console.log(imgUrl, uploadedImage, "uploadedImage........");
+    }
+
+    specialtyData.icon = imgUrl;
+
     return await prisma.specialty.create({
         data: specialtyData,
     });
 };
 
-const getAllSpecialties = async () => {
-    return await prisma.specialty.findMany();
+const getAllSpecialties = async (query: TQueryObject) => {
+    const result = await getAllItems<Specialty>(prisma.specialty, query, {
+        // orderBy: { title: "asc" },
+        searchableFields: ["title"],
+        filterableFields: ["title"],
+        isDeletedCondition: false,
+    });
+
+    return result;
 };
 
 const deleteSpecialty = async (id: string) => {

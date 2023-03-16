@@ -15,14 +15,19 @@ router.post(
 );
 router.get(
     "/",
-    checkAuth(UserRole.SUPER_ADMIN, UserRole.ADMIN),
+    checkAuth(
+        UserRole.SUPER_ADMIN,
+        UserRole.ADMIN,
+        UserRole.DOCTOR,
+        UserRole.PATIENT
+    ),
     AppointmentController.getAllAppointments
 );
-router.get(
-    "/my-appointments",
-    checkAuth(UserRole.DOCTOR, UserRole.PATIENT),
-    AppointmentController.getMyAppointments
-);
+// router.get(
+//     "/my-appointments",
+//     checkAuth(UserRole.DOCTOR, UserRole.PATIENT),
+//     AppointmentController.getMyAppointments
+// );
 
 router.patch(
     "/:id",
