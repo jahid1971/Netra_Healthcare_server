@@ -6,11 +6,11 @@ import globalErrorHandler from "./app/middleWares/globalErrorHandler";
 import notFound from "./app/middleWares/notFound";
 import { AppointmentService } from "./app/modules/appointment/appointment.service";
 import cron from "node-cron";
-import { errorlogger } from "./app/services/logger";
+
 import { ScheduleService } from "./app/modules/schedule/schedule.service";
 import { createServer } from "http";
 import { Server } from "socket.io";
-
+import { prisma } from "./app/services/prisma.service";
 import { configureSocket } from "./sockets/socket";
 
 const app: Application = express();
@@ -24,7 +24,12 @@ app.use(
 
 export const httpServer = createServer(app);
 
-
+// export const io = new Server(httpServer, {
+//     cors: {
+//         origin: "http://localhost:3000",
+//         methods: ["GET", "POST"],
+//     },
+// });
 export const io = new Server(httpServer, {
     cors: {
         origin: process.env.CLIENT_BASE_URL,
@@ -33,6 +38,37 @@ export const io = new Server(httpServer, {
 });
 configureSocket();
 
+// io.on("connection", (socket) => {
+//     console.log(`User connected: ${socket.id}`);
+
+//     // Join a room based on user ID
+//     socket.on("join_room", (userId) => {
+//         socket.join(userId);
+//         console.log(`User ${userId} joined room`);
+//     });
+
+//     // Handle incoming messages
+//     socket.on("send_message", async (data) => {
+//         const { senderId, receiverId, message } = data;
+
+//         // Save message to the database
+//         await prisma.chatMessage.create({
+//             data: {
+//                 senderId,
+//                 receiverId,
+//                 message,
+//             },
+//         });
+
+//         // Emit the message to the receiver's room
+//         io.to(receiverId).emit("receive_message", data);
+//     });
+
+//     // Handle disconnection
+//     socket.on("disconnect", () => {
+//         console.log(`User disconnected: ${socket.id}`);
+//     });
+// });
 
 app.use(cookieParser());
 
@@ -47,7 +83,7 @@ cron.schedule("*/10 * * * *", async (): Promise<void> => {
         await AppointmentService.cleanUnpaidAppointments();
         await ScheduleService.cleanUpSchedules();
     } catch (error) {
-        errorlogger.error(error);
+        console.error(error);
     }
 });
 
