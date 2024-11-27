@@ -17,6 +17,8 @@ import { sendImageToCloudinary } from "../../services/sendImageToCloudinary";
 import sharp from "sharp";
 
 const getAllDoctors = async (query: TQueryObject<Doctor>) => {
+
+    console.log(query, "query in doctor service =========================");
     const andConditions = [];
 
     const specialtyIds = Array.isArray(query.specialties)

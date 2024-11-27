@@ -23,7 +23,7 @@ export const prisma = new PrismaClient({
 
 export const findUserByEmail = async (email: string): Promise<User | null> => {
     return await prisma.user.findUnique({
-        where: { email, status: "ACTIVE" },
+        where: { email, status:  { not: "DELETED" } },
     });
 };
 

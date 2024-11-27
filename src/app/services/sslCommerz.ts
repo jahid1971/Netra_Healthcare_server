@@ -1,12 +1,14 @@
 import config from "../config";
 import AppError from "../errors/AppError";
-// @ts-expect-error: SSLCommerzPayment does not have type definitions
 import SSLCommerzPayment from "sslcommerz-lts";
 import { Patient, Payment } from "@prisma/client";
 
+// if (!config.ssl.storeId || !config.ssl.storePass) {
+//     throw new Error("SSLCommerz storeId or storePass is not defined in config.");
+// }
 const sslcmz = new SSLCommerzPayment(
-    config.ssl.storeId,
-    config.ssl.storePass,
+    config.ssl.storeId as string,
+    config.ssl.storePass as string,
     config.ssl.is_live === "true"
 );
 

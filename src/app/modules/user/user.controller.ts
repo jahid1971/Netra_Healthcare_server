@@ -3,13 +3,14 @@ import sendSuccessResponse from "../../utls/sendSuccessResponse";
 import { userService } from "./user.service";
 
 const createAdmin = catchAsync(async (req, res) => {
-    const result = await userService.createAdmin(req.body.data);
+    console.log("Creating admin with payload: in controller", req.body);
+    const result = await userService.createAdmin(req.body);
 
     sendSuccessResponse(res, result, "Admin created successfully", 201);
 });
 
 const createDoctor = catchAsync(async (req, res) => {
-    const result = await userService.createDoctor(req.body.data);
+    const result = await userService.createDoctor(req.body);
 
     sendSuccessResponse(res, result, "Doctor created successfully", 201);
 });

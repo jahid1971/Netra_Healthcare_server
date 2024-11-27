@@ -23,8 +23,17 @@ const createUser = async (
     role: UserRole,
     modelName: "admin" | "doctor" | "patient"
 ) => {
-    const user = await findUserByEmail(payload.email);
-    if (user) throw new AppError(400, "User already exists");
+    const user = await prisma.user.findUnique({
+        where: { email: payload.email },
+    });
+
+    if (user && user.status !== UserStatus.ACTIVE) {
+        throw new AppError(
+            400,
+            `User with this email  already exists  and user status is ${user.status}`
+        );
+    }
+    if (user) throw new AppError(400, "User already exists with this email");
 
     const hashedPassword = await processPassword.hashPassword(
         payload.password as string

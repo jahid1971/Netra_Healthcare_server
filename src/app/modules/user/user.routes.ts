@@ -11,7 +11,6 @@ const router = express.Router();
 router.post(
     "/create-admin",
     checkAuth(UserRole.SUPER_ADMIN, UserRole.ADMIN),
-    handleImageUpload,
     validateRequest(UserValidation.createAdmin),
     userController.createAdmin
 );
@@ -19,14 +18,12 @@ router.post(
 router.post(
     "/create-doctor",
     checkAuth(UserRole.SUPER_ADMIN, UserRole.ADMIN),
-    handleImageUpload,
     validateRequest(UserValidation.createDoctor),
     userController.createDoctor
 );
 
 router.post(
     "/create-patient",
-    handleImageUpload,
     validateRequest(UserValidation.createPatient),
     userController.createPatient
 );
