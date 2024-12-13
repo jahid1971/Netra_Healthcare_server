@@ -1,7 +1,6 @@
 import AppError from "../errors/AppError";
 import { User, UserRole, UserStatus } from "@prisma/client";
 import { PrismaClient } from "@prisma/client";
-import { processPassword } from "../utls/passwordHash";
 
 
 export const prisma = new PrismaClient({

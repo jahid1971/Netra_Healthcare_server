@@ -1,8 +1,8 @@
-
 import { prisma } from "../../services/prisma.service";
 import { io } from "../../../app";
 import { sendImageToCloudinary } from "../../services/sendImageToCloudinary";
 import AppError from "../../errors/AppError";
+import sharp from "sharp";
 
 const getCahtHistory = async (senderId: string, receiverId: string) => {
     const chatHistory = await prisma.chatMessage.findMany({
@@ -62,15 +62,19 @@ const unreadCount = async (userId: string, senderId: string) => {
 };
 
 const uploadFileMsg = async (data: any, file: any) => {
-
     let imgUrl: string | undefined = undefined;
 
     if (file) {
         const fileName = file?.originalname;
 
+        const optimizedBuffer = await sharp(file.buffer)
+            .resize({ width: 480 })
+            .webp({ quality: 80 })
+            .toBuffer();
+
         const uploadedImage = await sendImageToCloudinary(
             `${fileName || `chat_file`}_${data.senderId}-${data.receiverId}`,
-            file?.buffer
+            optimizedBuffer
         );
 
         imgUrl = uploadedImage?.secure_url;
@@ -90,7 +94,6 @@ const uploadFileMsg = async (data: any, file: any) => {
         },
     });
 
-
     io.to(data.receiverId).emit("receive_message", savedMessage);
     io.to(data.senderId).emit("receive_message", savedMessage);
 
@@ -98,7 +101,7 @@ const uploadFileMsg = async (data: any, file: any) => {
         savedMessage.receiverId,
         savedMessage.senderId
     );
-     io.to(savedMessage.receiverId).emit("count_unread", countUnread);
+    io.to(savedMessage.receiverId).emit("count_unread", countUnread);
 };
 
 export const ChatService = {

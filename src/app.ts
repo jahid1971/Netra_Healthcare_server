@@ -12,24 +12,22 @@ import { createServer } from "http";
 import { Server } from "socket.io";
 import { prisma } from "./app/services/prisma.service";
 import { configureSocket } from "./sockets/socket";
+import config from "./app/config";
 
 const app: Application = express();
 
 app.use(
     cors({
-        origin: ["http://localhost:5173", "http://localhost:3000"],
+        origin: [
+            config.client_url as string,
+            // "http://localhost:3000",
+        ],
         credentials: true,
     })
 );
 
 export const httpServer = createServer(app);
 
-// export const io = new Server(httpServer, {
-//     cors: {
-//         origin: "http://localhost:3000",
-//         methods: ["GET", "POST"],
-//     },
-// });
 export const io = new Server(httpServer, {
     cors: {
         origin: process.env.CLIENT_BASE_URL,
@@ -37,38 +35,6 @@ export const io = new Server(httpServer, {
     },
 });
 configureSocket();
-
-// io.on("connection", (socket) => {
-//     console.log(`User connected: ${socket.id}`);
-
-//     // Join a room based on user ID
-//     socket.on("join_room", (userId) => {
-//         socket.join(userId);
-//         console.log(`User ${userId} joined room`);
-//     });
-
-//     // Handle incoming messages
-//     socket.on("send_message", async (data) => {
-//         const { senderId, receiverId, message } = data;
-
-//         // Save message to the database
-//         await prisma.chatMessage.create({
-//             data: {
-//                 senderId,
-//                 receiverId,
-//                 message,
-//             },
-//         });
-
-//         // Emit the message to the receiver's room
-//         io.to(receiverId).emit("receive_message", data);
-//     });
-
-//     // Handle disconnection
-//     socket.on("disconnect", () => {
-//         console.log(`User disconnected: ${socket.id}`);
-//     });
-// });
 
 app.use(cookieParser());
 
@@ -80,19 +46,18 @@ app.use("/api/v1", router);
 
 cron.schedule("*/10 * * * *", async (): Promise<void> => {
     try {
-        await AppointmentService.cleanUnpaidAppointments();
+        // await AppointmentService.cleanUnpaidAppointments();
         await ScheduleService.cleanUpSchedules();
     } catch (error) {
         console.error(error);
     }
 });
 
-app.use(notFound);
-
 app.use(globalErrorHandler);
 
 app.get("/", (req: Request, res: Response) => {
     res.send("server is running");
 });
+app.use(notFound);
 
 export default app;

@@ -8,8 +8,8 @@ import {
     prisma,
     softDeleteUserById,
 } from "../../services/prisma.service";
-
-
+import { sendImageToCloudinary } from "../../services/sendImageToCloudinary";
+import sharp from "sharp";
 
 const getAllLAdmin = async (query: TQueryObject) => {
     const result = await getAllItems<Admin & { user: User }>(
@@ -22,13 +22,13 @@ const getAllLAdmin = async (query: TQueryObject) => {
         }
     );
 
-    const admins = result.data.map((item) => {
-        return {
-            ...item,
-            role: item.user.role,
-        };
-    }
-    ) || [];
+    const admins =
+        result.data.map((item) => {
+            return {
+                ...item,
+                role: item.user.role,
+            };
+        }) || [];
 
     return admins;
 };
@@ -38,11 +38,32 @@ const getAdminById = async (id: string) => {
     return result;
 };
 
-const updateAdmin = async (id: string, payload: Partial<Admin>) => {
-    await existsById(prisma.admin, id);
+const updateAdmin = async (
+    adminId: string,
+    payload: Partial<Admin>,
+    file: any
+) => {
+    await existsById(prisma.admin, adminId, "Admin");
+
+    if (!payload) payload = {};
+
+    if (file) {
+        const optimizedBuffer = await sharp(file.buffer)
+            .resize({ width: 320 })
+            .webp({ quality: 80 })
+            .toBuffer();
+
+        const uploadedImage = await sendImageToCloudinary(
+            `admin-${adminId}`,
+            // file?.buffer
+            optimizedBuffer
+        );
+
+        payload.profilePhoto = uploadedImage?.secure_url;
+    }
 
     const result = await prisma.admin.update({
-        where: { id },
+        where: { id: adminId },
         data: payload,
     });
 

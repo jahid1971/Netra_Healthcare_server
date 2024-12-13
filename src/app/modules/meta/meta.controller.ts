@@ -5,6 +5,8 @@ import { MetaService } from "./meta.service";
 const getDashboardMetaData = catchAsync(async (req, res) => {
     const result = await MetaService.getDashboardMetaData(req.user);
 
+    console.log("result", result);
+
     sendSuccessResponse(
         res,
         result,

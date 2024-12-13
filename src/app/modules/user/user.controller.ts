@@ -1,4 +1,3 @@
-
 import catchAsync from "../../utls/catchAsync";
 import sendSuccessResponse from "../../utls/sendSuccessResponse";
 import { userService } from "./user.service";
@@ -29,12 +28,14 @@ const getAllUsers = catchAsync(async (req, res) => {
 
 const getMyProfile = catchAsync(async (req, res) => {
     const result = await userService.getMyProfile(req.user);
-
     sendSuccessResponse(res, result, "Profile fetched successfully");
 });
 
 const changeUserStatus = catchAsync(async (req, res) => {
-    const result = await userService.changeUserStatus(req.params.id, req.body.status);
+    const result = await userService.changeUserStatus(
+        req.params.id,
+        req.body.status
+    );
 
     sendSuccessResponse(res, result, "User status changed successfully");
 });

@@ -19,11 +19,11 @@
         "multer": "^1.4.5-lts.1",
         "node-cron": "^3.0.3",
         "nodemailer": "^6.9.16",
+        "sharp": "^0.33.5",
         "socket.io": "^4.8.1",
         "sslcommerz-lts": "^1.1.0",
         "uuid": "^11.0.2",
         "winston": "^3.15.0",
-        "winston-daily-rotate-file": "^5.0.0",
         "zod": "^3.23.8"
     },
     "devDependencies": {
@@ -56,8 +56,9 @@
         "start": "ts-node-dev --respawn --transpile-only src/server.ts",
         "m": "npx prisma migrate dev",
         "build": "prisma generate && tsc",
-        "postinstall": "prisma generate",
+        "postinstall": "prisma generate && prisma migrate deploy && npm run seed:prod",
         "seed": "ts-node-dev --respawn --transpile-only prisma/seed.ts",
+        "seed:prod": "ts-node --transpile-only prisma/seed.ts",
         "lint": "eslint src",
         "lint:fix": "npx eslint src --fix",
         "prettier": "prettier --ignore-path .gitignore --write \"./src/**/*.+(js|ts|json)\"",

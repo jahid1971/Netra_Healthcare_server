@@ -20,7 +20,7 @@ cloudinary.config({
 
 export const sendImageToCloudinary = (
     imageName: string,
-    buffer: string
+    buffer: Buffer | string
 ): Promise<TcloudinaryResponse> => {
     // Upload an image from buffer
     return new Promise((resolve, reject) => {

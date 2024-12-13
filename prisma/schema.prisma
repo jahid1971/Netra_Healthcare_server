@@ -3,8 +3,9 @@ generator client {
 }
 
 datasource db {
-  provider = "postgresql"
-  url      = env("DATABASE_URL")
+  provider  = "postgresql"
+  url       = env("DATABASE_URL")
+  // directUrl = env("SUPABASE_DIRECT_URL")
 }
 
 model User {
@@ -12,6 +13,7 @@ model User {
   email              String     @unique
   password           String?
   needPasswordChange Boolean?   @default(true)
+  authProvider       String?    @default("OWN")
   createdAt          DateTime   @default(now())
   updatedAt          DateTime   @updatedAt
   role               UserRole

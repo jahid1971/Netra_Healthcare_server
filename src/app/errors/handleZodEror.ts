@@ -3,6 +3,7 @@ import { ZodError } from "zod";
 import { IErrorIssue, IGenericErrorResponse } from "../types/common";
 
 const handlerZodError = (err: ZodError): IGenericErrorResponse => {
+    console.log(err , 'err in zod error handle ---------------');
     const errorIssues: IErrorIssue[] = err.issues.map((issue) => {
         if (issue?.message === "Required")
             issue.message = `${issue?.path[0]} is required`;

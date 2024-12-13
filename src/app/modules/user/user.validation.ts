@@ -1,4 +1,3 @@
-
 import { z } from "zod";
 
 const createDoctor = z.object({
@@ -14,6 +13,7 @@ const createDoctor = z.object({
     qualification: z.string(),
     currentWorkingPlace: z.string(),
     designation: z.string(),
+    specialties: z.array(z.string()),
 });
 
 const createAdmin = z.object({

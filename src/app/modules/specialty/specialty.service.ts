@@ -25,7 +25,7 @@ const createSpecialty = async (specialtyData: Specialty, file: any) => {
         );
 
         imgUrl = uploadedImage?.secure_url;
-        console.log(imgUrl, uploadedImage, "uploadedImage........");
+        console.log(imgUrl,  "imageUrl........");
     }
 
     specialtyData.icon = imgUrl;

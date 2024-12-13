@@ -31,7 +31,12 @@ router.get(
 
 router.patch(
     "/:id",
-    checkAuth(UserRole.DOCTOR, UserRole.ADMIN, UserRole.SUPER_ADMIN),
+    checkAuth(
+        UserRole.DOCTOR,
+        UserRole.ADMIN,
+        UserRole.SUPER_ADMIN,
+        UserRole.PATIENT
+    ),
     validateRequest(appointmentValidation.changeAppointmentStatus),
     AppointmentController.changeAppointmentStatus
 );

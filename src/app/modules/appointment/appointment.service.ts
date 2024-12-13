@@ -128,7 +128,6 @@ const getAllAppointments = async (user: User, query: TQueryObject) => {
             ? { schedule: { startDateTime: "asc" } }
             : { schedule: { startDateTime: "desc" } };
 
-    console.log(query, "query -------------------------------");
 
     const searchCondition = [];
     if (query.searchTerm) {

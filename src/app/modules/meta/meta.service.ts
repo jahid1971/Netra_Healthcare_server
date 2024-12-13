@@ -14,7 +14,7 @@ import {
 } from "date-fns";
 import { User, UserRole } from "@prisma/client";
 import AppError from "../../errors/AppError";
-import {  TQueryObject } from "../../types/common";
+import { TQueryObject } from "../../types/common";
 
 const getDashboardMetaData = async (user: User) => {
     const doctor = await prisma.doctor.findUnique({
@@ -35,6 +35,19 @@ const getDashboardMetaData = async (user: User) => {
         },
     });
     const patientCount = await prisma.patient.count();
+
+    const patientCountForDoctor = await prisma.appointment
+        .groupBy({
+            by: ["patientId"],
+            where: {
+                doctorId: doctor?.id,
+            },
+            _count: {
+                patientId: true,
+            },
+        })
+        .then((result) => result.length);
+
     const doctorCount = await prisma.doctor.count();
     const totalRevenue = await prisma.payment.aggregate({
         _sum: {
@@ -69,11 +82,15 @@ const getDashboardMetaData = async (user: User) => {
 
     return {
         appointmentCount,
-        patientCount,
+        patientCount:
+            user?.role === UserRole.DOCTOR
+                ? patientCountForDoctor
+                : patientCount,
+
         ...(user?.role !== UserRole.DOCTOR && {
             doctorCount,
         }),
-        totalRevenue: totalRevenue._sum.amount,
+        totalRevenue: totalRevenue._sum.amount || 0,
         appointmentsPieData,
     };
 };
