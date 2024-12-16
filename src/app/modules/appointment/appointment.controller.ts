@@ -40,11 +40,20 @@ const changeAppointmentStatus = catchAsync(async (req, res) => {
         req.user
     );
 
+    console.log(result ,req.body.status,"update result and body...................." ); 
+
     sendSuccessResponse(res, result, "appointment status changed");
+});
+
+const upsertReview = catchAsync(async (req, res) => {
+    const result = await AppointmentService.upsertReview(req.user, req.body);
+
+    sendSuccessResponse(res, result, "review updated", 201);
 });
 
 export const AppointmentController = {
     createAppointment,
     getAllAppointments,
     changeAppointmentStatus,
+    upsertReview,
 };

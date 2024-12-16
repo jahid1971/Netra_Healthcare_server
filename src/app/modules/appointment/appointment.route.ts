@@ -41,4 +41,10 @@ router.patch(
     AppointmentController.changeAppointmentStatus
 );
 
+router.post(
+    "/review",
+    checkAuth(UserRole.PATIENT),
+    AppointmentController.upsertReview
+);
+
 export const AppointmentRouter = router;

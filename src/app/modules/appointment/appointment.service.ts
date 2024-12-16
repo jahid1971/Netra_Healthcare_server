@@ -2,6 +2,7 @@ import {
     Appointment,
     AppointmentStatus,
     PaymentStatus,
+    Review,
     User,
     UserRole,
 } from "@prisma/client";
@@ -10,7 +11,7 @@ import AppError from "../../errors/AppError";
 import { v4 as uuidv4 } from "uuid";
 import { sslService } from "../../services/sslCommerz";
 import getAllItems from "../../utls/getAllItems";
-import {  TQueryObject } from "../../types/common";
+import { TQueryObject } from "../../types/common";
 
 const createAppointment = async (data: Appointment, user: User) => {
     const isDoctorExists = await existsById(
@@ -128,7 +129,6 @@ const getAllAppointments = async (user: User, query: TQueryObject) => {
             ? { schedule: { startDateTime: "asc" } }
             : { schedule: { startDateTime: "desc" } };
 
-
     const searchCondition = [];
     if (query.searchTerm) {
         searchCondition.push({
@@ -240,14 +240,12 @@ const changeAppointmentStatus = async (
         );
     }
 
-    await prisma.appointment.update({
+    const result = await prisma.appointment.update({
         where: { id: appointmentId },
         data: { status },
     });
 
-    return {
-        message: "Appointment status changed successfully",
-    };
+    return result;
 };
 
 // clean unpaid appointments after every 30 minutes............................................................
@@ -298,14 +296,104 @@ const cleanUnpaidAppointments = async () => {
                 },
             });
         }
-
     });
+};
+
+// const upsertReview = async (user: User, data: Review) => {
+//     const isAppointmentExists = await prisma.appointment.findUnique({
+//         where: {
+//             id: data.appointmentId,
+//         },
+//     });
+
+//     if (!isAppointmentExists) {
+//         throw new AppError(404, "Appointment not found");
+//     }
+
+//     // const isReviewExists = await prisma.review.findFirst({
+//     //     where: {
+//     //         appointmentId: data.appointmentId,
+//     //     },
+//     // });
+
+//     const result = await prisma.review.create({
+//         data: {
+//             ...data,
+//         },
+//     });
+
+//     return result;
+// };
+
+const upsertReview = async (user: User, data: Review) => {
+    const isAppointmentExists = await prisma.appointment.findUnique({
+        where: {
+            id: data.appointmentId,
+        },
+    });
+
+    if (!isAppointmentExists) {
+        throw new AppError(404, "Appointment not found");
+    }
+
+    const existingReview = await prisma.review.findFirst({
+        where: {
+            appointmentId: data.appointmentId,
+        },
+    });
+
+    let result;
+
+    await prisma.$transaction(async (tx) => {
+        if (existingReview) {
+            result = await prisma.review.update({
+                where: {
+                    id: existingReview.id,
+                },
+                data: { ...data },
+            });
+        } else {
+            result = await prisma.review.create({
+                data: {
+                    doctorId: data.doctorId,
+                    patientId: data.patientId,
+                    appointmentId: data.appointmentId,
+                    rating: data.rating,
+                    comment: data.comment || "",
+                },
+            });
+        }
+
+        const doctorReviews = await prisma.review.findMany({
+            where: {
+                doctorId: data.doctorId,
+            },
+        });
+
+        const totalRatings = doctorReviews.reduce(
+            (acc, review) => acc + review.rating,
+            0
+        );
+        const ratingCount = doctorReviews?.length;
+
+        await tx.doctor.update({
+            where: {
+                id: data.doctorId,
+            },
+            data: {
+                averageRating: totalRatings / ratingCount,
+                ratingCount: ratingCount,
+            },
+        });
+    });
+
+    return result;
 };
 
 export const AppointmentService = {
     createAppointment,
-
     getAllAppointments,
     changeAppointmentStatus,
     cleanUnpaidAppointments,
+    upsertReview,
 };

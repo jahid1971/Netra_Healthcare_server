@@ -1,5 +1,5 @@
 import { DoctorSpecialty } from "./../../../../node_modules/.prisma/client/index.d";
-import { Doctor } from "@prisma/client";
+import { Doctor, Review } from "@prisma/client";
 import {
     deleteUserById,
     existsById,
@@ -14,6 +14,7 @@ import {
 } from "./doctor.constants";
 import { TUpdateDoctorPayload } from "./doctor.validation";
 import { sendImageToCloudinary } from "../../services/sendImageToCloudinary";
+import sharp from "sharp";
 
 const getAllDoctors = async (query: TQueryObject<Doctor>) => {
     const andConditions = [];
@@ -59,7 +60,7 @@ const getAllDoctors = async (query: TQueryObject<Doctor>) => {
     }
 
     const result = await getAllItems<
-        Doctor & { specialties: DoctorSpecialty[] }
+        Doctor & { specialties: DoctorSpecialty[]; Review: Review[] }
     >(prisma.doctor, query, {
         searchableFields: doctorSearchableFileds as (keyof Doctor)[],
 
@@ -67,7 +68,11 @@ const getAllDoctors = async (query: TQueryObject<Doctor>) => {
 
         andConditions,
 
-        include: { specialties: { select: { specialty: true } } },
+        include: {
+            specialties: { select: { specialty: true } },
+            // Review: { select: { rating: true, comment: true } },
+        },
+        orderBy: { averageRating: "desc" },
 
         extraSearchConditions: searchConditions,
     });
@@ -91,13 +96,17 @@ const updateDoctor = async (
 ) => {
     await existsById(prisma.doctor, doctorId, "Doctor");
 
-
     if (!payload) payload = {};
 
     if (file) {
+        const optimizedBuffer = await sharp(file.buffer)
+            .resize({ width: 480 })
+            .webp({ quality: 80 })
+            .toBuffer();
+
         const uploadedImage = await sendImageToCloudinary(
             `doctor-${doctorId}`,
-            file?.buffer
+            optimizedBuffer
         );
 
         payload.profilePhoto = uploadedImage?.secure_url;

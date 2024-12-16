@@ -11,7 +11,7 @@ router.post(
     "/",
     checkAuth(UserRole.PATIENT),
     validateRequest(reviewValidation.reviewZodSchema),
-    ReviewController.createReview
+    ReviewController.upsertReview
 );
 
 router.get("/", ReviewController.getReviews);

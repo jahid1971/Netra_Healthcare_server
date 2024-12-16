@@ -5,7 +5,7 @@ import AppError from "../../errors/AppError";
 import { TQueryObject } from "../../types/common";
 import getAllItems from "../../utls/getAllItems";
 
-const createReview = async (user: User, payload: TReviewPayload) => {
+const upsertReview = async (user: User, payload: TReviewPayload) => {
     const appointment = await prisma.appointment.findFirst({
         where: {
             id: payload.appointmentId,
@@ -84,6 +84,6 @@ const getReviews = async (query: TQueryObject) => {
 };
 
 export const ReviewService = {
-    createReview,
+    upsertReview,
     getReviews,
 };

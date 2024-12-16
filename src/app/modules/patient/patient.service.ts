@@ -7,9 +7,10 @@ import {
 import { existsById, prisma } from "../../services/prisma.service";
 import { TUpdatePatientPayload } from "./patient.validation";
 import { sendImageToCloudinary } from "../../services/sendImageToCloudinary";
-import {  TQueryObject } from "../../types/common";
+import { TQueryObject } from "../../types/common";
 import AppError from "../../errors/AppError";
 import getAllItems from "../../utls/getAllItems";
+import sharp from "sharp";
 
 const getAllPatients = async (query: TQueryObject<Patient>) => {
     const andConditions = [];
@@ -44,9 +45,14 @@ const updatePatient = async (
     const patient = await existsById(prisma.patient, patientId, "Patient");
 
     if (file) {
+        const optimizedBuffer = await sharp(file.buffer)
+            .resize({ width: 480 })
+            .webp({ quality: 80 })
+            .toBuffer();
+
         const { secure_url } = await sendImageToCloudinary(
             `patient-${patientId}`,
-            file?.buffer
+            optimizedBuffer
         );
         payload.profilePhoto = secure_url;
     }

@@ -4,6 +4,7 @@ import AppError from "../../errors/AppError";
 import getAllItems from "../../utls/getAllItems";
 import { TQueryObject } from "../../types/common";
 import { sendImageToCloudinary } from "../../services/sendImageToCloudinary";
+import sharp from "sharp";
 
 const createSpecialty = async (specialtyData: Specialty, file: any) => {
     const specialty = await prisma.specialty.findUnique({
@@ -19,13 +20,18 @@ const createSpecialty = async (specialtyData: Specialty, file: any) => {
     if (file) {
         const fileName = file?.originalname;
 
+        const optimizedBuffer = await sharp(file.buffer)
+            .resize({ width: 320 })
+            .webp({ quality: 80 })
+            .toBuffer();
+
         const uploadedImage = await sendImageToCloudinary(
             `${fileName || `specialty`}_${specialtyData.title}`,
-            file?.buffer
+            optimizedBuffer
         );
 
         imgUrl = uploadedImage?.secure_url;
-        console.log(imgUrl,  "imageUrl........");
+        console.log(imgUrl, "imageUrl........");
     }
 
     specialtyData.icon = imgUrl;
