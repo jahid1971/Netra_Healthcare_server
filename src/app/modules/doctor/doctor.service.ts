@@ -72,7 +72,7 @@ const getAllDoctors = async (query: TQueryObject<Doctor>) => {
             specialties: { select: { specialty: true } },
             // Review: { select: { rating: true, comment: true } },
         },
-        orderBy: { averageRating: "desc" },
+        // orderBy: { averageRating: "desc" },
 
         extraSearchConditions: searchConditions,
     });

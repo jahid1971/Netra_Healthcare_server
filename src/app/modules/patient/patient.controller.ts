@@ -42,9 +42,15 @@ const getPtMedicalHistory = catchAsync(async (req, res) => {
     );
 });
 
+const deletePatient = catchAsync(async (req, res) => {
+    const result = await PatientService.deletepatient(req.params.id);
+    sendSuccessResponse(res, result, "Patient deleted successfully");
+});
+
 export const PatientController = {
     getAllPatients,
     updatePatient,
     updatePatientMedicalHistory,
     getPtMedicalHistory,
+    deletePatient,
 };

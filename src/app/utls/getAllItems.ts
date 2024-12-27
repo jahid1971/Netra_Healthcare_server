@@ -87,6 +87,8 @@ const getAllItems = async <T>(
     const whereConditions =
         andConditions.length > 0 ? { AND: andConditions } : undefined;
 
+        console.log(sortBy, sortOrder, "sort .............query");
+
     const result = await Model.findMany({
         where: whereConditions,
         skip: (page - 1) * limit,

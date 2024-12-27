@@ -31,4 +31,10 @@ router.get(
     PatientController.getPtMedicalHistory
 );
 
+router.delete(
+    "/:id",
+    checkAuth(UserRole.ADMIN, UserRole.SUPER_ADMIN),
+    PatientController.deletePatient
+);
+
 export const patientRouter = router;

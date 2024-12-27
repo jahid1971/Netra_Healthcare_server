@@ -16,13 +16,12 @@ import config from "./app/config";
 
 const app: Application = express();
 
-console.log("client url", config.client_url);
 
 app.use(
     cors({
         origin: [
             config.client_url as string,
-            // "http://localhost:3000",
+            "https://netra-health-care.vercel.app",
         ],
         credentials: true,
     })
@@ -47,9 +46,9 @@ app.use(express.urlencoded({ extended: true })); // for parsing application/x-ww
 app.use("/api/v1", router);
 
 // to keep the server alive hosted on render
-app.get('/keepalive', (req, res) => {
-    res.status(200).send('OK');
-  });
+app.get("/keepalive", (req, res) => {
+    res.status(200).send("OK");
+});
 
 cron.schedule("*/10 * * * *", async (): Promise<void> => {
     try {

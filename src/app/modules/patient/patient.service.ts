@@ -4,7 +4,12 @@ import {
     User,
     UserStatus,
 } from "@prisma/client";
-import { existsById, prisma } from "../../services/prisma.service";
+import {
+    deleteUserById,
+    existsById,
+    prisma,
+    softDeleteUserById,
+} from "../../services/prisma.service";
 import { TUpdatePatientPayload } from "./patient.validation";
 import { sendImageToCloudinary } from "../../services/sendImageToCloudinary";
 import { TQueryObject } from "../../types/common";
@@ -65,7 +70,7 @@ const updatePatient = async (
         if (!user) throw new AppError(404, "User not found");
 
         const result = await prisma.user.update({
-            where: { id: user.id },
+            where: { id: user?.id },
             data: { status: payload.status },
         });
 
@@ -105,9 +110,15 @@ const getPtMedicalHistory = async (patientId: string) => {
 
     return result;
 };
+
+const deletepatient = async (patientId: string) => {
+    return await softDeleteUserById("patient", patientId);
+};
+
 export const PatientService = {
     getAllPatients,
     updatePatient,
     updatePatientMedicalHistory,
     getPtMedicalHistory,
+    deletepatient,
 };
