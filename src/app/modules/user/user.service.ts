@@ -74,11 +74,6 @@ const createUser = async (
 };
 
 const createAdmin = async (payload: User & Admin) => {
-    console.log(
-        "payload",
-        payload,
-        "payload .................________________________________________________________________"
-    );
     return createUser(payload, UserRole.ADMIN, "admin");
 };
 const createDoctor = async (payload: User & Doctor) => {
@@ -86,6 +81,7 @@ const createDoctor = async (payload: User & Doctor) => {
 };
 
 const createPatient = async (payload: User & Patient) => {
+    payload.needPasswordChange = false;
     return createUser(payload, UserRole.PATIENT, "patient");
 };
 

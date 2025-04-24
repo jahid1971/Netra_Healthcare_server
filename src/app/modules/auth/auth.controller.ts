@@ -14,6 +14,7 @@ const logIn = catchAsync(async (req, res) => {
   res.cookie("refreshToken", refreshToken, {
     httpOnly: true,
     secure: config.NODE_ENV === "production",
+    sameSite: config.NODE_ENV === "production" ? "none" : "lax",
   });
   const data = {
     accessToken,
@@ -74,6 +75,7 @@ const googleCallback = catchAsync(async (req: Request, res: Response) => {
     res.cookie("refreshToken", result.refreshToken, {
       secure: config.NODE_ENV === "production",
       httpOnly: true,
+      sameSite: config.NODE_ENV === "production" ? "none" : "lax",
     });
 
     const clientRedirectRoute = req.query.state || "";

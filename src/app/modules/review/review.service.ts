@@ -32,7 +32,7 @@ const upsertReview = async (user: User, payload: TReviewPayload) => {
         );
     }
 
-    const result = await prisma.$transaction(async (tx) => {
+    const result = await prisma.$transaction(async (tx:any) => {
         const review = await tx.review.create({
             data: {
                 patientId: appointment.patientId,

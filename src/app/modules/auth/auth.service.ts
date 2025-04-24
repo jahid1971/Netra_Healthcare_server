@@ -58,12 +58,13 @@ const logIn = async (payload: { email: string; password: string }) => {
     };
 };
 
-// changePassword......................changePassword
+// changePassword....................changePassword
 const changePassword = async (
     user: User,
     payload: { oldPassword: string; newPassword: string }
 ) => {
     const authUser = await findUserById(user.id);
+   
 
     if (authUser?.authProvider !== "OWN")
         throw new AppError(
@@ -75,7 +76,7 @@ const changePassword = async (
         user.password as string
     );
     if (!isPasswordMatched)
-        throw new AppError(401, "Old Password Is Incorrect");
+        throw new AppError(400, "Old Password Is Incorrect");
 
     const isOldAdnNewPasswordSame = await processPassword.comparePassword(
         payload.newPassword,
@@ -227,7 +228,7 @@ const googleCallback = async (code: string) => {
         user = existingUser;
 
         if (!existingUser) {
-            user = await prisma.$transaction(async (transactionClient) => {
+            user = await prisma.$transaction(async (transactionClient:any) => {
                 const newUser = await transactionClient.user.create({
                     data: {
                         email,

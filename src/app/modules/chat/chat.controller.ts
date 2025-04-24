@@ -11,11 +11,9 @@ const getChatHistory = catchAsync(async (req, res) => {
 const updateMessage = catchAsync(async (req, res) => {
     const { id } = req.params;
     const payload = req.body;
-    const updatedMessage = await ChatService.updateChatMessage(
-        Number(id),
-        payload
-    );
-    sendSuccessResponse(res, updatedMessage, "Message updated successfully");
+    const result = await ChatService.updateChatMessage(Number(id), payload);
+    
+    sendSuccessResponse(res, result, "Message updated successfully");
 });
 
 const countUnread = catchAsync(async (req, res) => {
@@ -31,7 +29,7 @@ const countUnread = catchAsync(async (req, res) => {
 const uploadFileMsg = catchAsync(async (req) => {
     const data = req.body.data;
     const file = req.file;
-   await ChatService.uploadFileMsg(data, file);
+    await ChatService.uploadFileMsg(data, file);
 });
 
 export const ChatController = {

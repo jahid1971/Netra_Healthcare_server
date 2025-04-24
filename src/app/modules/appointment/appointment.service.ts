@@ -41,7 +41,7 @@ const createAppointment = async (data: Appointment, user: User) => {
 
     const videoCallingId: string = uuidv4();
 
-    const result = await prisma.$transaction(async (tx) => {
+    const result = await prisma.$transaction(async (tx: any) => {
         const appointment = await tx.appointment.create({
             data: {
                 patientId: patient.id,
@@ -263,9 +263,9 @@ const cleanUnpaidAppointments = async () => {
 
     if (unpaidAppointments.length === 0) return;
 
-    const unpaidAppointmentIds = unpaidAppointments.map((a) => a.id);
+    const unpaidAppointmentIds = unpaidAppointments.map((a: any) => a.id);
 
-    await prisma.$transaction(async (tx) => {
+    await prisma.$transaction(async (tx: any) => {
         await tx.payment.deleteMany({
             where: {
                 appointmentId: {
@@ -328,7 +328,7 @@ const cleanUnpaidAppointments = async () => {
 const upsertReview = async (user: User, data: Review) => {
     const isAppointmentExists = await prisma.appointment.findUnique({
         where: {
-            id: data.appointmentId,
+            id: data?.appointmentId ?? undefined,
         },
     });
 
@@ -344,7 +344,7 @@ const upsertReview = async (user: User, data: Review) => {
 
     let result;
 
-    await prisma.$transaction(async (tx) => {
+    await prisma.$transaction(async (tx: any) => {
         if (existingReview) {
             result = await prisma.review.update({
                 where: {
@@ -371,7 +371,7 @@ const upsertReview = async (user: User, data: Review) => {
         });
 
         const totalRatings = doctorReviews.reduce(
-            (acc, review) => acc + review.rating,
+            (acc: any, review: any) => acc + review.rating,
             0
         );
         const ratingCount = doctorReviews?.length;

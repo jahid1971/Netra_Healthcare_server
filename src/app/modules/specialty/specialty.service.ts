@@ -7,8 +7,8 @@ import { sendImageToCloudinary } from "../../services/sendImageToCloudinary";
 import sharp from "sharp";
 
 const createSpecialty = async (specialtyData: Specialty, file: any) => {
-    const specialty = await prisma.specialty.findUnique({
-        where: { title: specialtyData.title },
+    const specialty = await prisma.specialty.findFirst({
+        where: { title: { equals: specialtyData.title, mode: "insensitive" } },
     });
 
     if (specialty) {

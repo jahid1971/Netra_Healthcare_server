@@ -16,6 +16,8 @@ import config from "./app/config";
 
 const app: Application = express();
 
+console.log("client url", config.client_url);
+
 app.use(
     cors({
         origin: [
@@ -30,7 +32,7 @@ export const httpServer = createServer(app);
 
 export const io = new Server(httpServer, {
     cors: {
-        origin: process.env.CLIENT_BASE_URL,
+        origin: config.client_url,
         methods: ["GET", "POST"],
     },
 });
@@ -43,6 +45,11 @@ app.use(express.json());
 app.use(express.urlencoded({ extended: true })); // for parsing application/x-www-form-urlencoded used in sslCommerz
 
 app.use("/api/v1", router);
+
+// to keep the server alive hosted on render
+app.get('/keepalive', (req, res) => {
+    res.status(200).send('OK');
+  });
 
 cron.schedule("*/10 * * * *", async (): Promise<void> => {
     try {

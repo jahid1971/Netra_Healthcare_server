@@ -24,7 +24,7 @@
         "sslcommerz-lts": "^1.1.0",
         "uuid": "^11.0.2",
         "winston": "^3.15.0",
-        "zod": "^3.23.8"
+        "zod": "^3.24.2"
     },
     "devDependencies": {
         "@eslint/js": "^9.13.0",

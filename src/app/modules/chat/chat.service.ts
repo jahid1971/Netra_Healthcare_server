@@ -27,7 +27,7 @@ const getCahtHistory = async (senderId: string, receiverId: string) => {
 };
 
 const updateChatMessage = async (id: number, payload: { read: true }) => {
-    await prisma.$transaction(async (tx) => {
+    const result = await prisma.$transaction(async (tx: any) => {
         const updatedMessage = await tx.chatMessage.update({
             where: {
                 id,
@@ -43,10 +43,12 @@ const updateChatMessage = async (id: number, payload: { read: true }) => {
             },
         });
 
-        io.to(updatedMessage.receiverId).emit("count_unread", unreadCount);
+        // io.to(updatedMessage.receiverId).emit("count_unread", unreadCount);  // not working on vercel have to debug
 
-        return updatedMessage;
+        return { updatedMessage, unreadCount };
     });
+
+    return result;
 };
 
 const unreadCount = async (userId: string, senderId: string) => {

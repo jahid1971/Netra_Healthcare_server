@@ -6,7 +6,6 @@ import config from "../config";
 import { User, UserRole } from "@prisma/client";
 import { prisma } from "../services/prisma.service";
 
-
 const checkAuth = (...requiredRoles: Array<UserRole>) => {
     return catchAsync(async (req, res, next) => {
         const token = req.cookies.accessToken || req.headers.authorization;
@@ -36,9 +35,15 @@ const checkAuth = (...requiredRoles: Array<UserRole>) => {
         if (user.status === "DELETED")
             throw new AppError(403, "User is deleted !");
 
-        if (requiredRoles && !requiredRoles.includes(role as UserRole)) {
+        if (
+            requiredRoles &&
+            !requiredRoles.includes(role as UserRole) &&
+            role !== UserRole.SUPER_ADMIN
+        ) {
             throw new AppError(401, `${role} is not allowed for this action`);
         }
+
+        
 
         req.user = user;
 

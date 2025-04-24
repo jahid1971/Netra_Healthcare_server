@@ -30,7 +30,7 @@ const sslSuccessCallback = async (sslData: any) => {
         return `${config.client_url}/payment?status=error`;
     }
 
-    await prisma.$transaction(async (transactionClient) => {
+    await prisma.$transaction(async (transactionClient: any) => {
         const paymentData = await transactionClient.payment.update({
             where: { transactionId: validatedData.tran_id },
             data: { status: PaymentStatus.PAID },
@@ -79,7 +79,7 @@ const sslFailCallback = async (sslData: any, status = "failed") => {
         return `${config.client_url}/payment?status=${status}`;
     }
 
-    await prisma.$transaction(async (tx) => {
+    await prisma.$transaction(async (tx: any) => {
         await tx.doctorSchedule.update({
             where: {
                 doctorId_scheduleId: {

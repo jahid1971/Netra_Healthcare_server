@@ -46,7 +46,7 @@ const getDashboardMetaData = async (user: User) => {
                 patientId: true,
             },
         })
-        .then((result) => result.length);
+        .then((result:any) => result?.length);
 
     const doctorCount = await prisma.doctor.count();
     const totalRevenue = await prisma.payment.aggregate({
@@ -73,7 +73,7 @@ const getDashboardMetaData = async (user: User) => {
         }),
     });
 
-    const appointmentsPieData = appointmnetsGroupByStatus.map((data) => {
+    const appointmentsPieData = appointmnetsGroupByStatus.map((data:any) => {
         return {
             status: data.status,
             count: Number(data._count),

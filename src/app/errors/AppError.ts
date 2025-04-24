@@ -1,6 +1,7 @@
 class AppError extends Error {
     public statusCode: number;
     public originalError?: Error | unknown;
+    public type: string;
 
     constructor(
         statusCode: number,
@@ -11,6 +12,7 @@ class AppError extends Error {
         super(message);
         this.statusCode = statusCode;
         this.originalError = error;
+        this.type = "AppError";
 
         if (stack) {
             this.stack = stack;

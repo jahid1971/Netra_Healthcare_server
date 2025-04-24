@@ -100,7 +100,7 @@ const getAllSchedules = async (query: TQueryObject<Schedule>, user: User) => {
             },
         });
         const scheduleIdsToRemove = doctorSchedules.map(
-            (doctorSchedule) => doctorSchedule.scheduleId
+            (doctorSchedule:any) => doctorSchedule.scheduleId
         );
         if (scheduleIdsToRemove.length) {
             andConditions.push(
@@ -158,7 +158,7 @@ const deleteSchedule = async (scheduleIds: string[]) => {
     });
 
     const notFoundSchedule = scheduleIds?.filter(
-        (id) => !schedules?.find((schedule) => schedule?.id === id)
+        (id) => !schedules?.find((schedule:any) => schedule?.id === id)
     );
 
     if (notFoundSchedule.length) throw new AppError(400, "schedule not found");
@@ -173,20 +173,20 @@ const deleteSchedule = async (scheduleIds: string[]) => {
 
     if (
         appointments.length &&
-        appointments.some((appointment) => appointment.status !== "COMPLETED")
+        appointments.some((appointment:any) => appointment.status !== "COMPLETED")
     ) {
         throw new AppError(
             400,
-            "Can't delete schedule, some appointments are booked for this schedule"
+            "You can't delete this schedule, some appointments are booked for this schedule"
         );
     }
 
-    const result = await prisma.$transaction(async (tx) => {
+    const result = await prisma.$transaction(async (tx:any) => {
         if (appointments.length) {
             await tx.payment.deleteMany({
                 where: {
                     appointmentId: {
-                        in: appointments.map((appointment) => appointment.id),
+                        in: appointments.map((appointment:any) => appointment.id),
                     },
                 },
             });
@@ -206,7 +206,7 @@ const deleteSchedule = async (scheduleIds: string[]) => {
                     in: scheduleIds,
                 },
                 doctorId: {
-                    in: appointments.map((appointment) => appointment.doctorId),
+                    in: appointments.map((appointment:any) => appointment.doctorId),
                 },
             },
         });
@@ -288,11 +288,11 @@ const cleanUpSchedules = async () => {
     const currentTime = new Date();
 
     const schedulesToDelete = schedules.filter(
-        (schedule) => schedule.endDateTime < currentTime
+        (schedule:any) => schedule.endDateTime < currentTime
     );
 
     if (schedulesToDelete.length) {
-        const scheduleIds = schedulesToDelete.map((schedule) => schedule.id);
+        const scheduleIds = schedulesToDelete.map((schedule:any) => schedule.id);
 
         const inCompleteAppointments = await prisma.appointment.findMany({
             where: {
@@ -305,46 +305,46 @@ const cleanUpSchedules = async () => {
             },
         });
 
-        const completedAppointments = await prisma.appointment.findMany({
-            where: {
-                scheduleId: {
-                    in: scheduleIds,
-                },
-                status: "COMPLETED", // Only for cleanup
-            },
-        });
+        // const completedAppointments = await prisma.appointment.findMany({
+        //     where: {
+        //         scheduleId: {
+        //             in: scheduleIds,
+        //         },
+        //         status: "COMPLETED", // Only for cleanup
+        //     },
+        // });
 
         const scheduleIdsToDelete = scheduleIds.filter(
-            (scheduleId) =>
+            (scheduleId:string) =>
                 !inCompleteAppointments.some(
-                    (appointment) => appointment.scheduleId === scheduleId
+                    (appointment:any) => appointment.scheduleId === scheduleId
                 )
         );
 
-        await prisma.$transaction(async (tx) => {
-            if (completedAppointments.length) {
-                const appointmentIdsToDelete = completedAppointments
-                    .filter((a) => scheduleIdsToDelete.includes(a.scheduleId))
-                    .map((a) => a.id);
+        await prisma.$transaction(async (tx:any) => {
+            // if (completedAppointments.length) {
+            //     const appointmentIdsToDelete = completedAppointments
+            //         .filter((a:any) => scheduleIdsToDelete.includes(a.scheduleId))
+            //         .map((a:any) => a.id);
 
-                // Delete payments linked to those appointments
-                await tx.payment.deleteMany({
-                    where: {
-                        appointmentId: {
-                            in: appointmentIdsToDelete,
-                        },
-                    },
-                });
+            //     // Delete payments linked to those appointments
+            //     await tx.payment.deleteMany({
+            //         where: {
+            //             appointmentId: {
+            //                 in: appointmentIdsToDelete,
+            //             },
+            //         },
+            //     });
 
-                // Delete completed appointments themselves
-                await tx.appointment.deleteMany({
-                    where: {
-                        id: {
-                            in: appointmentIdsToDelete,
-                        },
-                    },
-                });
-            }
+            //     // Delete completed appointments themselves
+            //     await tx.appointment.deleteMany({
+            //         where: {
+            //             id: {
+            //                 in: appointmentIdsToDelete,
+            //             },
+            //         },
+            //     });
+            // }
 
             await tx.doctorSchedule.deleteMany({
                 where: {

@@ -43,7 +43,7 @@ const createPrescription = async (user: User, data: TPrescription) => {
 
     const { medications, ...prescription } = data;
 
-    const result = await prisma.$transaction(async (tx) => {
+    const result = await prisma.$transaction(async (tx:any) => {
         const newPrescription = await tx.prescription.create({
             data: {
                 patientId: appointment.patientId,

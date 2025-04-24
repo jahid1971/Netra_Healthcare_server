@@ -2,10 +2,24 @@ import AppError from "../errors/AppError";
 import { User, UserRole, UserStatus } from "@prisma/client";
 import { PrismaClient } from "@prisma/client";
 
-
 export const prisma = new PrismaClient({
     errorFormat: "minimal",
 });
+
+// let prismaClient;
+
+// if (process.env.NODE_ENV === "production") {
+//     // In production (Vercel), use a global instance
+//     if (!(global as any).prisma) {
+//         (global as any).prisma = new PrismaClient();
+//     }
+//     prismaClient = (global as any).prisma;
+// } else {
+//     // In development, create a new instance each time
+//     prismaClient = new PrismaClient();
+// }
+
+// export const prisma = prismaClient;
 
 export const findUserByEmail = async (email: string): Promise<User | null> => {
     return await prisma.user.findUnique({
@@ -79,4 +93,3 @@ export const softDeleteUserById = async (
         return softDeletedRecord;
     });
 };
-

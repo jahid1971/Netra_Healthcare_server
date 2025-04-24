@@ -169,7 +169,7 @@ const getDoctorById = async (doctorId: string) => {
     return {
         ...result,
         specialties: result?.specialties.map(
-            (specialty) => specialty.specialty
+            (specialty:any) => specialty.specialty
         ),
     };
 };
