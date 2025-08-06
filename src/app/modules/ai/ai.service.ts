@@ -6,16 +6,41 @@ const getSpecialistSuggestion = async (
 ) => {
     const specialtiesList =
         specialties && specialties.length
-            ? `Available specialties: ${specialties.join(", ")}.`
+            ? `Available specialties: ${specialties.join(", ")}`
             : "";
-    const prompt = `Given the following symptoms from a patient: ${symptoms}. ${specialtiesList} \nSuggest the most relevant specialties from the list (if any), and provide a short, friendly message for the patient. \nIf there is no relevant match, reply with a standard message for the patient and an empty array.\nReturn your response as a JSON object with keys 'message' and 'specialties'.`;
 
-    let aiResult = await callOpenRouterAI(prompt);
+    // Use single quotes for the prompt string to avoid issues with backticks in comments
+    const prompt =
+        'Symptoms details: ' +
+        symptoms +
+        '. SpecialtiesList: ' +
+        specialtiesList +
+        '. From the SpecialtiesList, suggest the most relevant specialty (if any) to the symptoms details. If a relevant specialty is found, set both availableSpecialty and requiredSpecialty to the matched specialty. If no relevant specialty is found, set availableSpecialty: null and requiredSpecialty to your suggestion. Respond ONLY with a raw JSON object, without any code block, markdown, or explanation. Do not include triple backticks (```) or any extra text.';
+
+    let aiResult;
     try {
-        aiResult = JSON.parse(aiResult);
-    } catch {
-        aiResult = { message: aiResult, specialties: [] };
+        const rawResult = await callOpenRouterAI(prompt);
+
+        if (!rawResult || rawResult.trim() === "") {
+            throw new Error("Empty or invalid response from AI service");
+        }
+
+        // Remove code block markers and trim
+        const cleaned = rawResult.replace(/```[a-zA-Z]*\n?|```/g, "").trim();
+
+        aiResult = JSON.parse(cleaned);
+    } catch (error) {
+       
+   
+        aiResult = {
+            message:
+                "Unable to process the request at the moment. Please try again later.",
+            availableSpecialty: null,
+            requiredSpecialty: null,
+        };
     }
+
+    console.log("AI Result: ------------------------", aiResult);
     return aiResult;
 };
 

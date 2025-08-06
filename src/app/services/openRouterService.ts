@@ -8,11 +8,12 @@ export async function callOpenRouterAI(prompt: string) {
     const response = await axios.post(
         "https://openrouter.ai/api/v1/chat/completions",
         {
-            model: "deepseek/deepseek-r1-0528:free",
+            // model: "deepseek/deepseek-r1-0528:free",
+            model: "deepseek/deepseek-chat-v3-0324:free",
             messages: [
                 { role: "user", content: prompt }
             ],
-            max_tokens: 200,
+            max_tokens: 300,
         },
         {
             headers: {
@@ -23,5 +24,6 @@ export async function callOpenRouterAI(prompt: string) {
             },
         }
     );
-    return response.data.choices[0].message.content;
+    console.log("usage deepseek token:----------------------- ", response?.data);
+    return response?.data?.choices[0]?.message?.content;
 }
