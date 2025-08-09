@@ -14,6 +14,7 @@ import { ReviewRoutes } from "../modules/review/reviewrouter";
 import { MetaRoutes } from "../modules/meta/meta.route";
 import { patientRouter } from "../modules/patient/patient.route";
 import { ChatRouter } from "../modules/chat/chat.route";
+import { aiRoutes } from "../modules/ai/ai.routes";
 
 const router = Router();
 
@@ -44,5 +45,7 @@ router.use("/review", ReviewRoutes);
 router.use("/metaData", MetaRoutes);
 
 router.use("/chat", ChatRouter);
+
+router.use("/ai", aiRoutes);
 
 export default router;

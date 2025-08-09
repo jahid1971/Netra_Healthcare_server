@@ -4,7 +4,8 @@ import catchAsync from "../utls/catchAsync";
 
 const validateRequest = (schema: AnyZodObject) => {
     return catchAsync(
-        async (req: Request, res: Response, next: NextFunction) => {
+        async (req: Request, res: Response, next: NextFunction) => { 
+            console.log(req.body, "request body in validateRequest middleware------------------------");
             if (req.body.data) {
                 await schema.parseAsync(req.body.data);
             } else {

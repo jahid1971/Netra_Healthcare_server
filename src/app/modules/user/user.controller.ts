@@ -16,6 +16,7 @@ const createDoctor = catchAsync(async (req, res) => {
 });
 
 const createPatient = catchAsync(async (req, res) => {
+    console.log("Creating patient with payload: in controller",req.body, req.body.data);
     const result = await userService.createPatient(req.body.data);
 
     sendSuccessResponse(res, result, "Patient created successfully", 201);

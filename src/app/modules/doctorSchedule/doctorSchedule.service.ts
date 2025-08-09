@@ -1,12 +1,9 @@
 import { DoctorSchedule, Schedule, User } from "@prisma/client";
 import { TDoctorSchedulePayload } from "./doctorSchedule.validation";
-import {
-
-    prisma,
-} from "../../services/prisma.service";
+import { prisma } from "../../services/prisma.service";
 import AppError from "../../errors/AppError";
 import getAllItems from "../../utls/getAllItems";
-import {  TQueryObject } from "../../types/common";
+import { TQueryObject } from "../../types/common";
 
 const createDoctorSchedule = async (
     user: User,
@@ -23,8 +20,6 @@ const createDoctorSchedule = async (
         doctorId: doctor.id,
         scheduleId,
     }));
-
-    console.log(doctorScheduleData, "doctorScheduleData........");
 
     const doctorSchedules = await prisma.doctorSchedule.createMany({
         data: doctorScheduleData,
@@ -105,7 +100,6 @@ const getDoctorSchedules = async (query: TQueryObject) => {
     delete query.startDate;
     delete query.endDate;
 
-
     const result = await getAllItems<DoctorSchedule & { schedule: Schedule }>(
         prisma.doctorSchedule,
         query,
@@ -120,59 +114,64 @@ const getDoctorSchedules = async (query: TQueryObject) => {
     return result;
 };
 
-// delete doctor schedule.............................................................................
-const deleteDocotrSchedule = async (user: User, scheduleId: string) => {
+// delete doctor schedules in bulk, similar to schedule service
+
+const deleteDocotrSchedule = async (user: User, scheduleIds: string[]) => {
+    if (
+        !scheduleIds ||
+        !Array.isArray(scheduleIds) ||
+        scheduleIds.length === 0
+    ) {
+        throw new AppError(400, "No schedule IDs provided for deletion.");
+    }
+
     const doctor = await prisma.doctor.findUnique({
         where: { email: user.email },
     });
     if (!doctor) throw new AppError(404, "Doctor not found!");
 
-    const doctorSchedule = await prisma.doctorSchedule.findUnique({
+    // Find all doctorSchedules for this doctor and the given scheduleIds
+    const doctorSchedules = await prisma.doctorSchedule.findMany({
         where: {
-            doctorId_scheduleId: {
-                doctorId: doctor.id,
-                scheduleId: scheduleId,
-            },
-        },
-    });
-
-    if (!doctorSchedule) throw new AppError(404, "Doctor schedule not found");
-
-    // const isBookedScheduled = await prisma.doctorSchedule.findFirst({
-    //     where: {
-    //         doctorId: doctor.id,
-    //         scheduleId: scheduleId,
-    //         isBooked: true,
-    //     }
-    // });
-
-    const appointment = await prisma.appointment.findFirst({
-        where: {
-            scheduleId: scheduleId,
             doctorId: doctor.id,
-            status: {
-                not: "COMPLETED",
-            },
+            scheduleId: { in: scheduleIds },
         },
     });
-
-    if (appointment) {
+    const foundIds = doctorSchedules.map((ds) => ds.scheduleId);
+    const notFound = scheduleIds?.filter((id) => !foundIds.includes(id));
+    if (notFound?.length)
         throw new AppError(
             400,
-            "At least one appointment booked for this schedule and not completed yet"
+            `Doctor schedule(s) not found: ${notFound.join(", ")}`
+        );
+
+    // Check for appointments that are not completed
+    const appointments = await prisma.appointment.findMany({
+        where: {
+            scheduleId: { in: scheduleIds },
+            doctorId: doctor.id,
+            status: { not: "COMPLETED" },
+        },
+    });
+    if (appointments?.length) {
+        const busyIds = appointments.map((a) => a.scheduleId);
+        throw new AppError(
+            400,
+            `You can't delete these schedules, some appointments are booked and not completed: ${busyIds.join(", ")}`
         );
     }
 
-    const result = await prisma.doctorSchedule.delete({
-        where: {
-            doctorId_scheduleId: {
-                doctorId: doctor.id,
-                scheduleId: scheduleId,
-            },
-        },
-    });
+    // Transactional delete
 
-    return result;
+    await prisma.$transaction(async (tx) => {
+        await tx.doctorSchedule.deleteMany({
+            where: {
+                doctorId: doctor.id,
+                scheduleId: { in: scheduleIds },
+            },
+        });
+    });
+    return { deleted: scheduleIds, skipped: [] };
 };
 
 export const DoctorScheduleService = {

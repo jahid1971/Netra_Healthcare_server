@@ -20,9 +20,13 @@ const createAppointment = async (data: Appointment, user: User) => {
         "Doctor"
     );
 
+    
+
     const patient = await prisma.patient.findUnique({
         where: { email: user.email },
     });
+
+    console.log(user.email,patient, "user in create appointment------------------------");
     if (!patient) throw new AppError(404, "Patient not found");
 
     const isDoctorScheduleExists = await prisma.doctorSchedule.findFirst({

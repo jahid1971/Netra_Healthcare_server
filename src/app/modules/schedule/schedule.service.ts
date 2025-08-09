@@ -9,7 +9,28 @@ import { TQueryObject } from "../../types/common";
 import AppError from "../../errors/AppError";
 
 const createSchedule = async (payload: TSchedule): Promise<Schedule[]> => {
-    const interverlTime = payload.duration || 30;
+    if (!payload.startDate) throw new AppError(400, "startDate is required");
+    if (!payload.endDate) throw new AppError(400, "endDate is required");
+    if (!payload.startTime) throw new AppError(400, "startTime is required");
+    if (!payload.endTime) throw new AppError(400, "endTime is required");
+    if (payload.startDate > payload.endDate)
+        throw new AppError(400, "startDate cannot be greater than endDate");
+    if (payload.startTime > payload.endTime)
+        throw new AppError(400, "startTime cannot be greater than endTime");
+
+    if (!payload.duration) throw new AppError(400, "duration is required");
+
+    const interverlTime = Number(payload.duration);
+
+    if (
+        new Date(payload.endTime).getTime() -
+            new Date(payload.startTime).getTime() <
+        interverlTime * 60 * 1000
+    )
+        throw new AppError(
+            400,
+            "endTime must be greater than startTime by at least the duration"
+        );
 
     const schedules = [];
 
@@ -41,7 +62,14 @@ const createSchedule = async (payload: TSchedule): Promise<Schedule[]> => {
             };
 
             const existingSchedule = await prisma.schedule.findFirst({
-                where: { ...scheduleData },
+                where: {
+                    startDateTime: {
+                        lt: scheduleData.endDateTime,
+                    },
+                    endDateTime: {
+                        gt: scheduleData.startDateTime,
+                    },
+                },
             });
 
             if (!existingSchedule) {
@@ -66,7 +94,7 @@ const createSchedule = async (payload: TSchedule): Promise<Schedule[]> => {
 
 const getAllSchedules = async (query: TQueryObject<Schedule>, user: User) => {
     const page = Number(query.page) || 1;
-    const limit = Number(query.limit) || 10;
+    let limit = Number(query.limit) || 10;
     const andConditions = [];
 
     if (query.startTime) {
@@ -94,13 +122,14 @@ const getAllSchedules = async (query: TQueryObject<Schedule>, user: User) => {
 
     // Handle scheduleIdsToRemove for doctors
     if (user?.role === UserRole.DOCTOR) {
+        limit = 100;
         const doctorSchedules = await prisma.doctorSchedule.findMany({
             where: {
                 doctor: { email: user.email },
             },
         });
         const scheduleIdsToRemove = doctorSchedules.map(
-            (doctorSchedule:any) => doctorSchedule.scheduleId
+            (doctorSchedule: any) => doctorSchedule.scheduleId
         );
         if (scheduleIdsToRemove.length) {
             andConditions.push(
@@ -110,7 +139,7 @@ const getAllSchedules = async (query: TQueryObject<Schedule>, user: User) => {
     }
 
     // Default sortOrder
-    !query.sortOrder && (query.sortOrder = "desc");
+    !query.sortOrder && (query.sortOrder = "asc");
 
     const whereClause =
         andConditions.length > 0
@@ -158,7 +187,7 @@ const deleteSchedule = async (scheduleIds: string[]) => {
     });
 
     const notFoundSchedule = scheduleIds?.filter(
-        (id) => !schedules?.find((schedule:any) => schedule?.id === id)
+        (id) => !schedules?.find((schedule: any) => schedule?.id === id)
     );
 
     if (notFoundSchedule.length) throw new AppError(400, "schedule not found");
@@ -173,7 +202,9 @@ const deleteSchedule = async (scheduleIds: string[]) => {
 
     if (
         appointments.length &&
-        appointments.some((appointment:any) => appointment.status !== "COMPLETED")
+        appointments.some(
+            (appointment: any) => appointment.status !== "COMPLETED"
+        )
     ) {
         throw new AppError(
             400,
@@ -181,12 +212,14 @@ const deleteSchedule = async (scheduleIds: string[]) => {
         );
     }
 
-    const result = await prisma.$transaction(async (tx:any) => {
+    const result = await prisma.$transaction(async (tx: any) => {
         if (appointments.length) {
             await tx.payment.deleteMany({
                 where: {
                     appointmentId: {
-                        in: appointments.map((appointment:any) => appointment.id),
+                        in: appointments.map(
+                            (appointment: any) => appointment.id
+                        ),
                     },
                 },
             });
@@ -206,7 +239,9 @@ const deleteSchedule = async (scheduleIds: string[]) => {
                     in: scheduleIds,
                 },
                 doctorId: {
-                    in: appointments.map((appointment:any) => appointment.doctorId),
+                    in: appointments.map(
+                        (appointment: any) => appointment.doctorId
+                    ),
                 },
             },
         });
@@ -288,11 +323,13 @@ const cleanUpSchedules = async () => {
     const currentTime = new Date();
 
     const schedulesToDelete = schedules.filter(
-        (schedule:any) => schedule.endDateTime < currentTime
+        (schedule: any) => schedule.endDateTime < currentTime
     );
 
     if (schedulesToDelete.length) {
-        const scheduleIds = schedulesToDelete.map((schedule:any) => schedule.id);
+        const scheduleIds = schedulesToDelete.map(
+            (schedule: any) => schedule.id
+        );
 
         const inCompleteAppointments = await prisma.appointment.findMany({
             where: {
@@ -315,13 +352,13 @@ const cleanUpSchedules = async () => {
         // });
 
         const scheduleIdsToDelete = scheduleIds.filter(
-            (scheduleId:string) =>
+            (scheduleId: string) =>
                 !inCompleteAppointments.some(
-                    (appointment:any) => appointment.scheduleId === scheduleId
+                    (appointment: any) => appointment.scheduleId === scheduleId
                 )
         );
 
-        await prisma.$transaction(async (tx:any) => {
+        await prisma.$transaction(async (tx: any) => {
             // if (completedAppointments.length) {
             //     const appointmentIdsToDelete = completedAppointments
             //         .filter((a:any) => scheduleIdsToDelete.includes(a.scheduleId))

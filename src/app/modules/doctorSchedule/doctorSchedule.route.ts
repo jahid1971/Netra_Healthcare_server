@@ -27,7 +27,7 @@ router.get(
 );
 
 router.delete(
-    "/:scheduleId",
+    "/",
     checkAuth(UserRole.DOCTOR),
     DoctorScheduleController.deleteDocotrSchedule
 );

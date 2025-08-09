@@ -24,6 +24,7 @@ router.post(
 
 router.post(
     "/create-patient",
+    handleImageUpload,
     validateRequest(UserValidation.createPatient),
     userController.createPatient
 );

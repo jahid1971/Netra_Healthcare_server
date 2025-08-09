@@ -30,11 +30,11 @@ const getDoctorSchedules = catchAsync(async (req, res) => {
 });
 
 const deleteDocotrSchedule = catchAsync(async (req, res) => {
-    const result = await DoctorScheduleService.deleteDocotrSchedule(
-        req.user,
-        req.params.scheduleId
-    );
 
+    const result = await DoctorScheduleService.deleteDocotrSchedule( 
+        req.user,
+        req.body
+    );
     sendSuccessResponse(res, result, "Doctor Schedules deleted successfully");
 });
 
