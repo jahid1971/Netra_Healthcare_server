@@ -48,7 +48,41 @@ Backend API for Netra Healthcare, a comprehensive telemedicine platform connecti
 - npm or yarn
 - PostgreSQL database
 
+### Installation
 
+1. Clone the repository
+```bash
+git clone https://github.com/yourusername/netra-healthcare-server.git
+cd netra-healthcare-server
+```
+
+2. Install dependencies
+```bash
+npm install
+# or
+yarn install
+```
+
+3. Configure environment variables
+```bash
+cp .env.example .env
+# Edit .env with your configuration
+```
+
+4. Set up the database
+```bash
+npx prisma migrate dev
+npx prisma db seed
+```
+
+5. Start the development server
+```bash
+npm run dev
+# or
+yarn dev
+```
+
+6. The API will be available at http://localhost:5000/api/v1
 
 ## 🧩 Project Structure
 

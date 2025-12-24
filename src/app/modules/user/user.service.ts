@@ -36,6 +36,7 @@ const createUser = async (
                 email: payload.email,
                 password: hashedPassword,
                 role: role,
+                needPasswordChange: false,
             },
         });
 
@@ -81,7 +82,6 @@ const createDoctor = async (payload: User & Doctor) => {
 };
 
 const createPatient = async (payload: User & Patient) => {
-    payload.needPasswordChange = false;
     return createUser(payload, UserRole.PATIENT, "patient");
 };
 
