@@ -36,7 +36,7 @@ const createUser = async (
                 email: payload.email,
                 password: hashedPassword,
                 role: role,
-                needPasswordChange: false,
+                needPasswordChange: true,
             },
         });
 

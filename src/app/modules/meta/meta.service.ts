@@ -34,7 +34,11 @@ const getDashboardMetaData = async (user: User) => {
             }),
         },
     });
-    const patientCount = await prisma.patient.count();
+    const patientCount = await prisma.patient.count({
+        where: {
+            isDeleted: false,
+        },
+    });
 
     const patientCountForDoctor = await prisma.appointment
         .groupBy({
@@ -46,9 +50,13 @@ const getDashboardMetaData = async (user: User) => {
                 patientId: true,
             },
         })
-        .then((result:any) => result?.length);
+        .then((result: any) => result?.length);
 
-    const doctorCount = await prisma.doctor.count();
+    const doctorCount = await prisma.doctor.count({
+        where: {
+            isDeleted: false,
+        },
+    });
     const totalRevenue = await prisma.payment.aggregate({
         _sum: {
             amount: true,
@@ -73,7 +81,7 @@ const getDashboardMetaData = async (user: User) => {
         }),
     });
 
-    const appointmentsPieData = appointmnetsGroupByStatus.map((data:any) => {
+    const appointmentsPieData = appointmnetsGroupByStatus.map((data: any) => {
         return {
             status: data.status,
             count: Number(data._count),
